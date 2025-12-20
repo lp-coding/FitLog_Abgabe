@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Training erfassen – FitLog{% endblock %}
+
+{% block content %}
+<h1>Training erfassen</h1>
+
+<form method="post"
+      action="{{ url_for('sessions.finish_session', session_id=sess.id) }}"
+      class="card p-4 space-y-4">
+
+  <!-- Kopfbereich -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+    <div>
+      <label class="block text-sm font-medium mb-1">Plan</label>
+      <input class="input w-full" type="text" value="{{ sess.plan_name }}" readonly>
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">
+        Trainingsdauer (Minuten)
+      </label>
+      <input class="input w-full" type="number" name="duration_minutes"
+             min="1" max="600" placeholder="45">
+    </div>
+  </div>
+
+  <!-- Tabelle: eine Zeile pro Übung -->
+  <div class="overflow-x-auto">
+    <table class="table w-full align-middle">
+      <thead>
+        <tr>
+          <th class="text-left">Übung</th>
+          <th class="text-right" style="width:7rem;">Sätze</th>
+          <th class="text-right" style="width:7rem;">Wdh.</th>
+          <th class="text-right" style="width:9rem;">Gewicht (kg)</th>
+          <th class="text-left">Notiz</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr class="border-t">
+          <td class="py-2">{{ item.name }}</td>
+
+          <td class="py-2 text-right">
+            <input class="input text-right"
+                   type="number"
+                   name="ex[{{ item.exercise_id }}][sets]"
+                   min="0" max="99" step="1"
+                   value="{{ item.sets if item.sets is not none else '' }}"
+                   inputmode="numeric"
+                   style="width:6rem">
+          </td>
+
+          <td class="py-2 text-right">
+            <input class="input text-right"
+                   type="number"
+                   name="ex[{{ item.exercise_id }}][reps]"
+                   min="1" max="999" step="1"
+                   value="{{ item.reps if item.reps is not none else '' }}"
+                   inputmode="numeric"
+                   style="width:6rem">
+          </td>
+
+          <td class="py-2 text-right">
+            <input class="input text-right"
+                   type="number"
+                   name="ex[{{ item.exercise_id }}][weight]"
+                   min="0" max="2000" step="0.5"
+                   value="{% if item.weight_kg is not none %}{{ '{:.1f}'.format(item.weight_kg) }}{% else %}{% endif %}"
+                   inputmode="decimal"
+                   style="width:7.5rem">
+          </td>
+
+          <td class="py-2">
+            <span class="text-gray-800">{{ item.note or '–' }}</span>
+            </td>
+
+        </tr>
+        <!-- wichtig: jede Zeile liefert die ID extra -->
+        <input type="hidden" name="exercise_id" value="{{ item.exercise_id }}">
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Aktionen -->
+  <div class="flex gap-2 justify-end">
+    <form method="post"
+          action="{{ url_for('sessions.abort_session', session_id=sess.id) }}">
+      <button class="btn btn-secondary" type="submit">Abbrechen</button>
+    </form>
+    <button class="btn btn-primary" type="submit">Speichern</button>
+  </div>
+</form>
+
+<!-- Clamp für Sätze (0..99) -->
+<script>
+  document.addEventListener('input', (ev) => {
+    const el = ev.target;
+    if (el.name && el.name.endsWith('[sets]')) {
+      const v = Number(el.value || 0);
+      if (v < 0) el.value = 0;
+      if (v > 99) el.value = 99;
+    }
+  });
+</script>
+{% endblock %}

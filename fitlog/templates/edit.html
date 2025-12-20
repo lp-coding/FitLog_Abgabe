@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Plan bearbeiten – {{ plan.name }}{% endblock %}
+
+{% block content %}
+<div class="plan-edit">
+
+  <div class="plan-header">
+    <input class="plan-name-input" type="text" name="plan_name" value="{{ plan.name }}" form="edit-form" placeholder="Planname">
+    <a class="icon-btn close-btn" href="{{ url_for('index') }}" title="Ohne Speichern schließen" aria-label="Schließen">×</a>
+  </div>
+
+  <form id="edit-form" action="{{ url_for('plans.update_plan', plan_id=plan.id) }}" method="post">
+    <table id="dndTable" class="table-edit">
+      <thead>
+        <tr>
+          <th style="width:2rem;"></th>
+          <th>Übung</th>
+          <th style="width:8rem;">Sätze</th>
+          <th style="width:8rem;">Wdh.</th>
+          <th style="width:10rem;">Gewicht (kg)</th>
+          <th>Notiz</th>
+          <th style="width:3rem;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr class="dnd-row" draggable="true" data-ex-id="{{ it.exercise_id }}">
+          <td class="drag" title="Ziehen, um Reihenfolge zu ändern">≡</td>
+          <td class="cell-name">
+            {{ it.name }}
+            <input type="hidden" name="exercise_id[]" value="{{ it.exercise_id }}">
+          </td>
+          <td><input class="input-num" type="number" name="default_sets[]" value="{{ it.default_sets or 3 }}" min="1"></td>
+          <td><input class="input-num" type="number" name="default_reps[]" value="{{ it.default_reps or 10 }}" min="1"></td>
+          <td><input class="input-num" type="number" step="0.5" name="default_weight_kg[]" value="{{ it.default_weight_kg or 0 }}"></td>
+          <td><input class="input-note" type="text" name="note[]" value="{{ it.note or '' }}" placeholder="…"></td>
+          <td>
+            <button class="icon-btn" type="button" data-remove="{{ it.exercise_id }}" title="Aus Plan entfernen">✕</button>
+          </td>
+          <input type="hidden" name="position[]" value="{{ loop.index }}">
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted">Noch keine Übungen im Plan.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
+
+  <div class="footer-bar">
+    <form class="add-exercise-form" action="{{ url_for('plans.add_exercise', plan_id=plan.id) }}" method="post">
+      <label for="exercise-select" class="sr-only">Übung auswählen</label>
+      <select id="exercise-select" name="exercise_id" class="input-select">
+        {% for e in all_exercises %}
+          <option value="{{ e.id }}">{{ e.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit">+ Übung hinzufügen</button>
+    </form>
+
+    <div class="actions">
+      <a class="btn btn-secondary" href="{{ url_for('index') }}">Abbrechen</a>
+      <button class="btn btn-primary" type="submit" form="edit-form">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const tbody = document.querySelector('#dndTable tbody');
+let dragEl = null;
+
+function updatePositions() {
+  [...tbody.querySelectorAll('tr.dnd-row')].forEach((tr, i) => {
+    const pos = tr.querySelector('input[name="position[]"]');
+    if (pos) pos.value = i + 1;
+  });
+}
+function getDragAfterElement(container, y) {
+  const els = [...container.querySelectorAll('tr.dnd-row:not(.is-dragging)')];
+  return els.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+tbody.addEventListener('dragstart', e => {
+  const row = e.target.closest('tr.dnd-row');
+  if (!row) return;
+  dragEl = row;
+  row.classList.add('is-dragging');
+});
+tbody.addEventListener('dragend', () => {
+  if (dragEl) dragEl.classList.remove('is-dragging');
+  dragEl = null;
+  updatePositions();
+});
+tbody.addEventListener('dragover', e => {
+  e.preventDefault();
+  const after = getDragAfterElement(tbody, e.clientY);
+  const dragging = tbody.querySelector('tr.dnd-row.is-dragging');
+  if (!dragging) return;
+  if (after == null) tbody.appendChild(dragging);
+  else tbody.insertBefore(dragging, after);
+});
+
+tbody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-remove]');
+  if (!btn) return;
+  const exId = btn.getAttribute('data-remove');
+  if (!confirm('Übung aus dem Plan entfernen? (Historie bleibt erhalten)')) return;
+
+  const res = await fetch('{{ url_for("plans.remove_exercise", plan_id=plan.id) }}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: new URLSearchParams({ exercise_id: exId })
+  });
+  if (res.ok) location.reload();
+  else alert('Entfernen fehlgeschlagen.');
+});
+
+// NEU: Beim "Übung hinzufügen" erst den Plan speichern, dann Übung hinzufügen
+const editForm = document.getElementById('edit-form');
+const addForm = document.querySelector('form.add-exercise-form');
+
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  updatePositions();
+
+  const addBtn = addForm.querySelector('button[type="submit"]');
+  if (addBtn) addBtn.disabled = true;
+
+  try {
+    const saveRes = await fetch(editForm.action, {
+      method: 'POST',
+      body: new FormData(editForm)
+    });
+    if (!saveRes.ok) {
+      alert('Konnte Änderungen nicht speichern. Bitte zuerst speichern, dann Übung hinzufügen.');
+      return;
+    }
+
+    const addRes = await fetch(addForm.action, {
+      method: 'POST',
+      body: new FormData(addForm)
+    });
+    if (!addRes.ok) {
+      alert('Übung konnte nicht hinzugefügt werden.');
+      return;
+    }
+
+    location.reload();
+  } catch (err) {
+    alert('Netzwerkfehler. Bitte erneut versuchen.');
+  } finally {
+    if (addBtn) addBtn.disabled = false;
+  }
+});
+
+updatePositions();
+</script>
+{% endblock %}

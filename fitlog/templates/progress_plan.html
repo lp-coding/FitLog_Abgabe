@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Trainingsfortschritt{{ title_suffix or "" }}{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/progress.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="progress-page card">
+
+  <!-- Kopfbereich: App-Titel, Diagramm-Auswahl, Schließen -->
+  <header class="progress-header">
+    <div class="progress-header__left">
+      <div class="progress-app-title">
+        FitLog – Der Trainingsplantracker
+      </div>
+
+      <div class="progress-row">
+        <label for="diagramType">Diagramm</label>
+        <select id="diagramType" class="progress-select">
+          <option value="plan"
+                  {% if diagram_type == "plan" %}selected{% endif %}>
+            Aktueller Leistungsstand pro Trainingsplan
+          </option>
+          <option value="exercise"
+                  {% if diagram_type == "exercise" %}selected{% endif %}>
+            Leistung über Zeit
+          </option>
+        </select>
+      </div>
+
+      <div class="progress-plan-title">
+        {% if diagram_type == "plan" %}
+          Trainingsfortschritt{% if selected_plan_name %} – {{ selected_plan_name }}{% endif %}
+        {% else %}
+          Übungsverlauf{% if selected_exercise_name %} – {{ selected_exercise_name }}{% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    <button type="button" class="btn btn--outline progress-close" id="btnClose">
+      X
+    </button>
+  </header>
+
+  <!-- Steuerbereich: Auswahl + Aktionen -->
+  <section class="progress-controls">
+    <!-- Auswahl Trainingsplan -->
+    <div class="progress-control-group"
+         id="planGroup"
+         {% if diagram_type != "plan" %}style="display:none"{% endif %}>
+      <label for="planSelect">Trainingsplan:</label>
+      <select id="planSelect" class="progress-select">
+        <option value="">Auswählen</option>
+        {% for p in plans %}
+          <option value="{{ p.id }}"
+                  {% if selected_plan_id and selected_plan_id == p.id %}selected{% endif %}>
+            {{ p.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Auswahl Übung -->
+    <div class="progress-control-group"
+         id="exerciseGroup"
+         {% if diagram_type != "exercise" %}style="display:none"{% endif %}>
+      <label for="exerciseSelect">Übung:</label>
+      <select id="exerciseSelect" class="progress-select">
+        <option value="">Auswählen</option>
+        {% for ex in exercises %}
+          <option value="{{ ex.id }}"
+                  {% if selected_exercise_id and selected_exercise_id == ex.id %}selected{% endif %}>
+            {{ ex.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="progress-controls__actions">
+      <button type="button"
+              class="btn"
+              id="btnExport"
+              {% if not image_url %}disabled aria-disabled="true"{% endif %}>
+        Export (PNG)
+      </button>
+    </div>
+  </section>
+
+  <!-- Diagramm-Bereich -->
+  <section class="progress-chart">
+    {% if image_url %}
+      <img
+        src="{{ image_url }}"
+        alt="Trainingsfortschritt Diagramm"
+        class="progress-chart__img"
+      >
+    {% else %}
+      <!-- Keine Auswahl: leere Fläche wie im Mockup -->
+    {% endif %}
+  </section>
+
+  <!-- Fußbereich: Zurück-Button -->
+  <footer class="progress-footer">
+    <button type="button" class="btn" id="btnBack">
+      Zurück
+    </button>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    function goHome() {
+      window.location.href = "{{ url_for('index') }}";
+    }
+
+    var btnBack = document.getElementById("btnBack");
+    if (btnBack) {
+      btnBack.addEventListener("click", goHome);
+    }
+
+    var btnClose = document.getElementById("btnClose");
+    if (btnClose) {
+      btnClose.addEventListener("click", goHome);
+    }
+
+    // Hilfsfunktion: URL mit Parametern neu aufrufen
+    function navigate(diagramType, planId, exerciseId) {
+      var baseUrl = "{{ url_for('progress.overview') }}";
+      var params = new URLSearchParams();
+
+      if (diagramType) {
+        params.set("diagram_type", diagramType);
+      }
+
+      if (diagramType === "plan" && planId) {
+        params.set("plan_id", planId);
+      } else if (diagramType === "exercise" && exerciseId) {
+        params.set("exercise_id", exerciseId);
+      }
+
+      var target = baseUrl;
+      var query = params.toString();
+      if (query) {
+        target += "?" + query;
+      }
+      window.location.href = target;
+    }
+
+    var diagramTypeSelect = document.getElementById("diagramType");
+    var planSelect = document.getElementById("planSelect");
+    var exerciseSelect = document.getElementById("exerciseSelect");
+
+    // Diagrammtyp wechseln
+    if (diagramTypeSelect) {
+      diagramTypeSelect.addEventListener("change", function () {
+        var type = this.value;
+
+        // Sichtbarkeit der Auswahlfelder umschalten
+        if (type === "plan") {
+          if (document.getElementById("planGroup")) {
+            document.getElementById("planGroup").style.display = "";
+          }
+          if (document.getElementById("exerciseGroup")) {
+            document.getElementById("exerciseGroup").style.display = "none";
+          }
+          navigate("plan", planSelect ? planSelect.value : "", null);
+        } else {
+          if (document.getElementById("planGroup")) {
+            document.getElementById("planGroup").style.display = "none";
+          }
+          if (document.getElementById("exerciseGroup")) {
+            document.getElementById("exerciseGroup").style.display = "";
+          }
+          navigate("exercise", null, exerciseSelect ? exerciseSelect.value : "");
+        }
+      });
+    }
+
+    // Auswahl des Trainingsplans
+    if (planSelect) {
+      planSelect.addEventListener("change", function () {
+        var diagramType = diagramTypeSelect ? diagramTypeSelect.value : "plan";
+        navigate(diagramType, this.value, null);
+      });
+    }
+
+    // Auswahl der Übung
+    if (exerciseSelect) {
+      exerciseSelect.addEventListener("change", function () {
+        var diagramType = diagramTypeSelect ? diagramTypeSelect.value : "exercise";
+        navigate(diagramType, null, this.value);
+      });
+    }
+
+    // PNG als Download anbieten
+    var btnExport = document.getElementById("btnExport");
+    if (btnExport) {
+      btnExport.addEventListener("click", function () {
+        var diagramType = diagramTypeSelect ? diagramTypeSelect.value : "plan";
+
+        if (diagramType === "plan") {
+          var pid = planSelect ? planSelect.value : "";
+          if (!pid) {
+            return;
+          }
+          window.location.href =
+            "{{ url_for('progress.plan_png', plan_id=0) }}".replace("0", pid) +
+            "?download=1";
+        } else {
+          var eid = exerciseSelect ? exerciseSelect.value : "";
+          if (!eid) {
+            return;
+          }
+          window.location.href =
+            "{{ url_for('progress.exercise_png', exercise_id=0) }}".replace("0", eid) +
+            "?download=1";
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

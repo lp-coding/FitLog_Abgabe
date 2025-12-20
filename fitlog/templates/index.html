@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}FitLog – Start{% endblock %}
+
+{% block content %}
+<div class="start-grid">
+  <!-- Linke Spalte: Trainingspläne -->
+  <section>
+    <h2>Trainingspläne</h2>
+
+    <!-- Listbox mit Plänen -->
+    <select id="planList" size="8" class="listbox">
+      {% for p in plans %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+      {% else %}
+        <option disabled>(Noch keine Trainingspläne)</option>
+      {% endfor %}
+    </select>
+
+    <!-- Buttonreihe: Löschen / Bearbeiten / Hinzufügen -->
+    <div class="row gap">
+      <button id="btnDelete"  type="button">Löschen</button>
+      <button
+        id="btnEdit"
+        type="button"
+        data-edit-template="{{ url_for('plans.edit_plan', plan_id=0) }}"
+      >Bearbeiten</button>
+      <button
+        id="btnAdd"
+        type="button"
+        data-create-url="{{ url_for('plans.create_plan') }}"
+        data-next-url="{{ url_for('index') }}"
+      >Hinzufügen</button>
+    </div>
+  </section>
+
+  <!-- Rechte Spalte: Verlauf -->
+  <section>
+    <h2>Verlauf</h2>
+
+    <div class="col gap">
+      <!-- <button id="btnCalories" type="button">Verbrauchte Kalorien</button> -->
+      <button
+        id="btnProgress"
+        type="button"
+        data-progress-url="{{ url_for('progress.overview') }}"
+      >Trainingsfortschritt</button>
+    </div>
+  </section>
+</div>
+
+<!-- Großer Button unten zentriert -->
+<div class="center">
+  <button
+    id="btnRecord"
+    class="big"
+    type="button"
+    data-new-session-url="{{ url_for('sessions.new_session') }}"
+    aria-disabled="true"
+    disabled
+  >
+    Trainingsdaten erfassen
+  </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/index.js') }}" defer></script>
+{% endblock %}
+
+
