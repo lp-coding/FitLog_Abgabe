@@ -368,7 +368,7 @@ def record_session(session_id: int):
     items = _load_record_items(db, session_id)
     db.close()
     return render_template(
-        "sessions/record.html",
+        "record.html",
         session=sess,  # optional alias, falls irgendwo 'session' verwendet wird
         sess=sess,     # wichtig: so heißt es im Template
         items=items,
