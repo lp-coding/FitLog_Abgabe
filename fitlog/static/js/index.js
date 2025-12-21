@@ -54,7 +54,7 @@
     btnDelete.addEventListener("click", async () => {
       const id = selId();
       if (!id) return alert("Bitte einen Plan in der Liste auswählen.");
-      if (!confirm("Diesen Plan wirklich archivieren (Soft-Delete)?")) return;
+      if (!confirm("Diesen Plan wirklich löschen?")) return;
 
       try {
         const res = await fetch(`/plans/${id}/delete`, { method: "POST" });
