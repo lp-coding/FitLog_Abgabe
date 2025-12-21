@@ -232,3 +232,43 @@ main{
   flex-wrap: wrap;
 }
 .actions{ display:flex; gap: var(--s-2); }
+
+/* =========================
+   Pages: Progess (progress_plan.html)
+========================= */
+.progress-header{
+  position: relative;              /* wichtig für absolute Position des X */
+}
+
+.progress-close{
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+}
+
+/* Chart-Bereich in der Card */
+.progress-chart{
+  padding: var(--s-4);
+  overflow: hidden;          /* verhindert “rausragen” */
+}
+
+/* Bild responsiv begrenzen */
+.progress-chart__img{
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 420px;         /* <- macht es weniger dominant */
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.progress-footer{
+  display: flex;
+  justify-content: flex-end;       /* nach rechts */
+  padding: var(--s-4);
+}
+/* Optional: bei sehr breiten Screens etwas mehr Höhe erlauben */
+@media (min-width: 1100px){
+  .progress-chart__img{ max-height: 480px; }
+}

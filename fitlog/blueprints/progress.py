@@ -217,7 +217,7 @@ def plan_view(plan_id: int) -> Response:
     db = get_db()
     plan_name = _fetch_plan_name(db, plan_id)
     if not plan_name:
-        abort(404, "Plan not found")
+        abort(404, "Plan nicht gefunden!")
 
     return redirect(
         url_for("progress.overview", diagram_type="plan", plan_id=plan_id)
@@ -234,7 +234,7 @@ def exercise_view(exercise_id: int) -> Response:
     db = get_db()
     exercise_name = _fetch_exercise_name(db, exercise_id)
     if not exercise_name:
-        abort(404, "Exercise not found")
+        abort(404, "Übung nicht gefunden!")
 
     plan_id = request.args.get("plan_id", type=int)
     return redirect(
@@ -261,7 +261,7 @@ def plan_png(plan_id: int):
     db = get_db()
     plan_name = _fetch_plan_name(db, plan_id)
     if not plan_name:
-        abort(404, "Plan not found")
+        abort(404, "Plan nicht gefunden!")
 
     data = _fetch_plan_exercises_with_latest_weight(db, plan_id)
     labels = [name for name, _ in data]
@@ -269,9 +269,9 @@ def plan_png(plan_id: int):
 
     fig, ax = plt.subplots(figsize=(7.5, 3.8), dpi=140)
     ax.bar(labels, values)
-    ax.set_title(f"Current weights per exercise – {plan_name}")
-    ax.set_ylabel("Weight (kg)")
-    ax.set_xlabel("Exercise")
+    ax.set_title(f"Aktuelles Gewicht pro Übung – {plan_name}")
+    ax.set_ylabel("Gewicht (kg)")
+    ax.set_xlabel("Übung")
     ax.grid(axis="y", linestyle=":", alpha=0.4)
     plt.setp(ax.get_xticklabels(), rotation=18, ha="right")
     plt.tight_layout()
