@@ -5,25 +5,13 @@ from typing import Any, Dict, List, Optional
 import sqlite3
 
 from flask import (
-    Blueprint, current_app, render_template, request,
+    Blueprint, render_template, request,
     redirect, url_for, abort, flash
 )
+from ..db import get_db
+import re
+
 bp = Blueprint("sessions", __name__, url_prefix="/sessions")
-
-
-# ------------------------------
-# DB Infrastruktur
-# ------------------------------
-def get_db() -> sqlite3.Connection:
-    """Open a SQLite connection with row_factory=Row and FK enabled."""
-    db_path = current_app.config.get("DATABASE")
-    if not db_path:
-        from pathlib import Path
-        db_path = str(Path(current_app.instance_path) / "fitlog.db")
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
-    return conn
 
 
 def _utcnow_iso() -> str:
@@ -153,92 +141,6 @@ def _update_plan_defaults_from_session(
             (w, plan_id, ex_id),
         )
 
-import re
-from typing import Any, Dict, Optional
-
-def _upsert_entries(db, session_id: int, form: Dict[str, Any]) -> None:
-    """
-    Erwartet Inputs wie: ex[<exercise_id>][weight|reps|sets|note]
-    Speichert pro exercise_id genau einen Eintrag in session_entries.
-    """
-
-    def get(key: str) -> str:
-        return str(form.get(key) or "").strip()
-
-    def to_int(s: str) -> Optional[int]:
-        if s == "":
-            return None
-        try:
-            return int(s)
-        except ValueError:
-            return None
-
-    def to_float(s: str) -> Optional[float]:
-        if s == "":
-            return None
-        try:
-            return float(s.replace(",", "."))
-        except ValueError:
-            return None
-
-    has_se_sets = _table_has_column(db, "session_entries", "sets")
-
-    # IDs aus hidden inputs (falls vorhanden)
-    exercise_ids = [int(x) for x in request.form.getlist("exercise_id") if str(x).isdigit()]
-
-    # Fallback: IDs aus ex[...] Keys ableiten
-    if not exercise_ids:
-        ids = set()
-        rx = re.compile(r"^ex\[(\d+)\]\[")
-        for k in form.keys():
-            m = rx.match(k)
-            if m:
-                ids.add(int(m.group(1)))
-        exercise_ids = sorted(ids)
-
-    for ex_id in exercise_ids:
-        sets_val = to_int(get(f"ex[{ex_id}][sets]"))
-        reps     = to_int(get(f"ex[{ex_id}][reps]"))
-        weight   = to_float(get(f"ex[{ex_id}][weight]"))
-        note     = get(f"ex[{ex_id}][note]")
-
-        # "Übung ausgelassen": wenn sets explizit 0 -> lösche ggf. bestehenden Eintrag
-        if sets_val == 0:
-            db.execute(
-                "DELETE FROM session_entries WHERE session_id = ? AND exercise_id = ?",
-                (session_id, ex_id),
-            )
-            continue
-
-        if has_se_sets:
-            db.execute(
-                """
-                INSERT INTO session_entries (session_id, exercise_id, weight_kg, reps, sets, note, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(session_id, exercise_id) DO UPDATE SET
-                  weight_kg = excluded.weight_kg,
-                  reps      = excluded.reps,
-                  sets      = excluded.sets,
-                  note      = excluded.note,
-                  created_at= excluded.created_at
-                """,
-                (session_id, ex_id, weight, reps, sets_val, note, _utcnow_iso()),
-            )
-        else:
-            db.execute(
-                """
-                INSERT INTO session_entries (session_id, exercise_id, weight_kg, reps, note, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(session_id, exercise_id) DO UPDATE SET
-                  weight_kg = excluded.weight_kg,
-                  reps      = excluded.reps,
-                  note      = excluded.note,
-                  created_at= excluded.created_at
-                """,
-                (session_id, ex_id, weight, reps, note, _utcnow_iso()),
-            )
-
-
 
 def _upsert_entries(db, session_id: int, form: Dict[str, Any]) -> None:
     """
@@ -334,7 +236,6 @@ def new_session():
     # plan_id aus Query-Param (?plan_id=...)
     plan_id = request.args.get("plan_id", type=int)
     if plan_id is None:
-        db.close()
         abort(400, description="plan_id is required")
 
     # prüfen, ob Plan existiert
@@ -344,7 +245,6 @@ def new_session():
     ).fetchone()
 
     if not plan:
-        db.close()
         abort(404)
 
     started_at = _utcnow_iso()
@@ -354,7 +254,6 @@ def new_session():
     )
     session_id = cur.lastrowid
     db.commit()
-    db.close()
 
     return redirect(url_for("sessions.record_session", session_id=session_id))
 
@@ -366,10 +265,8 @@ def record_session(session_id: int):
     db = get_db()
     sess = _load_session(db, session_id)
     items = _load_record_items(db, session_id)
-    db.close()
     return render_template(
         "record.html",
-        session=sess,  # optional alias, falls irgendwo 'session' verwendet wird
         sess=sess,     # wichtig: so heißt es im Template
         items=items,
     )
@@ -383,7 +280,6 @@ def record_session_post(session_id: int):
     _ = _load_session(db, session_id)
     _upsert_entries(db, session_id, request.form)
     db.commit()
-    db.close()
     flash("Zwischenspeicherung erfolgreich", "success")
     return redirect(url_for("sessions.record_session", session_id=session_id))
 
@@ -427,7 +323,6 @@ def finish_session(session_id: int):
     _update_plan_defaults_from_session(db, sess["plan_id"], session_id)
 
     db.commit()
-    db.close()
     flash("Training wurde gespeichert", "success")
     return redirect(url_for("index"))
 
@@ -440,6 +335,5 @@ def abort_session(session_id: int):
     db.execute("DELETE FROM session_entries WHERE session_id = ?", (session_id,))
     db.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
     db.commit()
-    db.close()
     flash("Training abgebrochen.", "info")
     return redirect(url_for("index"))

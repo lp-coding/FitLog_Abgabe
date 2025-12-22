@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Trainingsfortschritt{{ title_suffix or "" }}{% endblock %}
 
-{% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/progress.css') }}">
-{% endblock %}
-
 {% block content %}
 <div class="progress-page card">
 

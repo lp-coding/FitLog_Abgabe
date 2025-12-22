@@ -1,23 +1,18 @@
-# fitlog/routes/progress.py
 from __future__ import annotations
+from flask import Blueprint, Response, render_template, request, abort, url_for
 
 import io
 from typing import List, Tuple, Optional
 from datetime import datetime
 
-from flask import Blueprint, Response, render_template, request, abort, redirect, url_for
+
 
 # Matplotlib im Headless-Mode
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# Hole get_db aus deinem Projekt.
-try:
-    from fitlog.db import get_db  # bevorzugt
-except Exception:
-    # Fallback, falls der Pfad sich mal ändert
-    from fitlog.database import get_db  # type: ignore  # noqa: F401
+from fitlog.db import get_db
 
 progress_bp = Blueprint("progress", __name__, url_prefix="/progress")
 
@@ -100,47 +95,31 @@ def _fetch_plan_exercises_with_latest_weight(db, plan_id: int) -> List[Tuple[str
 def _fetch_exercise_history(
     db,
     exercise_id: int,
-    plan_id: Optional[int],
 ) -> List[Tuple[str, float]]:
     """
-    Liefert Verlauf (ISO-Datum, Gewicht) für eine Übung.
-    Optional nach Plan filterbar.
-    Sortiert nach Datum/Zeit aufsteigend.
+    Historie einer Übung abrufen:
+    Liste von (YYYY-MM-DD, weight_kg).
     """
-    if plan_id:
-        rows = db.execute(
-            """
-            SELECT
-                DATE(COALESCE(se.created_at, s.ended_at, s.started_at)) AS day,
-                se.weight_kg
-            FROM session_entries se
-            JOIN sessions s ON s.id = se.session_id
-            WHERE se.exercise_id = ?
-              AND s.plan_id = ?
-            ORDER BY COALESCE(se.created_at, s.ended_at, s.started_at)
-            """,
-            (exercise_id, plan_id),
-        ).fetchall()
-    else:
-        rows = db.execute(
-            """
-            SELECT
-                DATE(COALESCE(se.created_at, s.ended_at, s.started_at)) AS day,
-                se.weight_kg
-            FROM session_entries se
-            JOIN sessions s ON s.id = se.session_id
-            WHERE se.exercise_id = ?
-            ORDER BY COALESCE(se.created_at, s.ended_at, s.started_at)
-            """,
-            (exercise_id,),
-        ).fetchall()
+    rows = db.execute(
+        """
+        SELECT
+            DATE(COALESCE(se.created_at, s.ended_at, s.started_at)) AS day,
+            se.weight_kg
+        FROM session_entries se
+        JOIN sessions s ON s.id = se.session_id
+        WHERE se.exercise_id = ?
+        ORDER BY COALESCE(se.created_at, s.ended_at, s.started_at)
+        """,
+        (exercise_id,),
+    ).fetchall()
 
     history: List[Tuple[str, float]] = []
-    for row in rows:
-        if row["weight_kg"] is None:
+    for r in rows:
+        if r["weight_kg"] is None:
             continue
-        history.append((row["day"], float(row["weight_kg"])))
+        history.append((r["day"], float(r["weight_kg"])))
     return history
+
 
 
 # ---------------------------
@@ -208,45 +187,6 @@ def overview() -> Response:
     )
 
 
-@progress_bp.get("/plan/<int:plan_id>")
-def plan_view(plan_id: int) -> Response:
-    """
-    Kompatibilitäts-Endpoint: vorbefüllte Plan-Ansicht.
-    Leitet intern auf die Übersichtsseite mit gesetztem diagram_type=plan weiter.
-    """
-    db = get_db()
-    plan_name = _fetch_plan_name(db, plan_id)
-    if not plan_name:
-        abort(404, "Plan nicht gefunden!")
-
-    return redirect(
-        url_for("progress.overview", diagram_type="plan", plan_id=plan_id)
-    )
-
-
-@progress_bp.get("/exercise/<int:exercise_id>")
-def exercise_view(exercise_id: int) -> Response:
-    """
-    Kompatibilitäts-Endpoint: vorbefüllte Übungsansicht.
-    Leitet intern auf die Übersichtsseite mit gesetztem diagram_type=exercise weiter.
-    Optionaler plan_id-Filter bleibt als Query-Parameter erhalten.
-    """
-    db = get_db()
-    exercise_name = _fetch_exercise_name(db, exercise_id)
-    if not exercise_name:
-        abort(404, "Übung nicht gefunden!")
-
-    plan_id = request.args.get("plan_id", type=int)
-    return redirect(
-        url_for(
-            "progress.overview",
-            diagram_type="exercise",
-            exercise_id=exercise_id,
-            plan_id=plan_id,
-        )
-    )
-
-
 # ---------------------------
 # PNG-Endpoints
 # ---------------------------
@@ -295,37 +235,32 @@ def exercise_png(exercise_id: int):
     """
     PNG für eine Übung zeichnen.
     Liniendiagramm: Gewicht über die Zeit.
-    Optional: ?plan_id=... zum Filtern, ?download=1 für Attachment-Header.
+    Optional: ?download=1 für Attachment-Header.
     """
-    plan_id = request.args.get("plan_id", type=int)
-
     db = get_db()
     exercise_name = _fetch_exercise_name(db, exercise_id)
     if not exercise_name:
         abort(404, "Exercise not found")
 
-    history = _fetch_exercise_history(db, exercise_id, plan_id)
+    history = _fetch_exercise_history(db, exercise_id)
     dates = [datetime.strptime(day, "%Y-%m-%d").date() for day, _ in history]
     weights = [w for _, w in history]
 
     fig, ax = plt.subplots(figsize=(7.5, 3.2), dpi=140)
 
     if weights:
-        # Linie mit Markern, x-Achse = Datum, y-Achse = Gewicht
         ax.plot(dates, weights, marker="o", linewidth=2)
     else:
         ax.text(
-            0.5, 0.5,
+            0.5,
+            0.5,
             "No data yet",
-            ha="center", va="center", transform=ax.transAxes
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
         )
 
     title = f"Weight over time – {exercise_name}"
-    if plan_id:
-        plan_name = _fetch_plan_name(db, plan_id)
-        if plan_name:
-            title += f" (Plan: {plan_name})"
-
     ax.set_title(title)
     ax.set_ylabel("Weight (kg)")
     ax.set_xlabel("Date")
@@ -342,6 +277,6 @@ def exercise_png(exercise_id: int):
     headers = {}
     if download:
         base = exercise_name.replace('"', "'")
-        suffix = f"_plan{plan_id}" if plan_id else ""
-        headers["Content-Disposition"] = f'attachment; filename=\"progress_exercise_{base}{suffix}.png\"'
+        headers["Content-Disposition"] = f'attachment; filename="progress_exercise_{base}.png"'
+
     return Response(buf.getvalue(), mimetype="image/png", headers=headers)
