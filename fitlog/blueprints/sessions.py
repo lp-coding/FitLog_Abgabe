@@ -186,7 +186,12 @@ def _upsert_entries(db, session_id: int, form: Dict[str, Any]) -> None:
         sets_val = to_int(get(f"ex[{ex_id}][sets]"))
         reps     = to_int(get(f"ex[{ex_id}][reps]"))
         weight   = to_float(get(f"ex[{ex_id}][weight]"))
-        note     = get(f"ex[{ex_id}][note]")
+        note_key = f"ex[{ex_id}][note]"
+        if note_key in form:
+            note_raw = str(form.get(note_key) or "").strip()
+            note = note_raw if note_raw != "" else None
+        else:
+            note = None
 
         # "Übung ausgelassen": wenn sets explizit 0 -> lösche ggf. bestehenden Eintrag
         if sets_val == 0:
@@ -205,7 +210,7 @@ def _upsert_entries(db, session_id: int, form: Dict[str, Any]) -> None:
                   weight_kg = excluded.weight_kg,
                   reps      = excluded.reps,
                   sets      = excluded.sets,
-                  note      = excluded.note,
+                  note      = COALESCE(excluded.note, session_entries.note),
                   created_at= excluded.created_at
                 """,
                 (session_id, ex_id, weight, reps, sets_val, note, _utcnow_iso()),
@@ -218,7 +223,7 @@ def _upsert_entries(db, session_id: int, form: Dict[str, Any]) -> None:
                 ON CONFLICT(session_id, exercise_id) DO UPDATE SET
                   weight_kg = excluded.weight_kg,
                   reps      = excluded.reps,
-                  note      = excluded.note,
+                  note      = COALESCE(excluded.note, session_entries.note),
                   created_at= excluded.created_at
                 """,
                 (session_id, ex_id, weight, reps, note, _utcnow_iso()),

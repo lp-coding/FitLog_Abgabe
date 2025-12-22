@@ -84,10 +84,12 @@
 
   <!-- Aktionen -->
   <div class="flex gap-2 justify-end">
-    <form method="post"
-          action="{{ url_for('sessions.abort_session', session_id=sess.id) }}">
-      <button class="btn btn-secondary" type="submit">Abbrechen</button>
-    </form>
+    <button class="btn btn-secondary"
+        type="submit"
+        formaction="{{ url_for('sessions.abort_session', session_id=sess.id) }}"
+        formmethod="post">
+      Abbrechen
+    </button>
     <button class="btn btn-primary" type="submit">Speichern</button>
   </div>
 </form>
