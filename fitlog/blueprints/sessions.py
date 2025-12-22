@@ -272,18 +272,6 @@ def record_session(session_id: int):
     )
 
 
-
-@bp.post("/<int:session_id>/record")
-def record_session_post(session_id: int):
-    """Zwischenspeichern der Eingaben, Session bleibt offen."""
-    db = get_db()
-    _ = _load_session(db, session_id)
-    _upsert_entries(db, session_id, request.form)
-    db.commit()
-    flash("Zwischenspeicherung erfolgreich", "success")
-    return redirect(url_for("sessions.record_session", session_id=session_id))
-
-
 @bp.post("/<int:session_id>/finish")
 def finish_session(session_id: int):
     """Training speichern & beenden."""
@@ -332,7 +320,6 @@ def abort_session(session_id: int):
     """Training abbrechen – löscht Session und Einträge."""
     db = get_db()
     _ = _load_session(db, session_id)
-    db.execute("DELETE FROM session_entries WHERE session_id = ?", (session_id,))
     db.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
     db.commit()
     flash("Training abgebrochen.", "info")

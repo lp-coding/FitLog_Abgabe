@@ -8,17 +8,6 @@ from ..db import get_db
 
 bp = Blueprint("plans", __name__, url_prefix="/plans")
 
-# -------------------------------------------------------------------
-# HTML: Pläne-Übersicht (/plans/page)
-# -------------------------------------------------------------------
-@bp.get("/page")
-def list_plans_page():
-    db = get_db()
-    rows = db.execute(
-        "SELECT id, name FROM training_plans WHERE deleted_at IS NULL ORDER BY id DESC"
-    ).fetchall()
-    return render_template("plans/list.html", plans=rows)
-
 
 # -------------------------------------------------------------------
 # NEU/FEHLTE: Plan anlegen  -> Endpoint-Name: plans.create_plan
