@@ -42,9 +42,10 @@
   <!-- Steuerbereich: Auswahl + Aktionen -->
   <section class="progress-controls">
     <!-- Auswahl Trainingsplan -->
-    <div class="progress-control-group"
-         id="planGroup"
-         {% if diagram_type != "plan" %}style="display:none"{% endif %}>
+    <div
+      class="progress-control-group{% if diagram_type != 'plan' %} is-hidden{% endif %}"
+      id="planGroup"
+    >
       <label for="planSelect">Trainingsplan:</label>
       <select id="planSelect" class="progress-select">
         <option value="">Auswählen</option>
@@ -58,9 +59,10 @@
     </div>
 
     <!-- Auswahl Übung -->
-    <div class="progress-control-group"
-         id="exerciseGroup"
-         {% if diagram_type != "exercise" %}style="display:none"{% endif %}>
+    <div
+      class="progress-control-group{% if diagram_type != 'exercise' %} is-hidden{% endif %}"
+      id="exerciseGroup"
+    >
       <label for="exerciseSelect">Übung:</label>
       <select id="exerciseSelect" class="progress-select">
         <option value="">Auswählen</option>
@@ -120,6 +122,13 @@
       btnClose.addEventListener("click", goHome);
     }
 
+    function show(el){
+      if (el) el.classList.remove("is-hidden");
+    }
+    function hide(el){
+      if (el) el.classList.add("is-hidden");
+    }
+
     // Hilfsfunktion: URL mit Parametern neu aufrufen
     function navigate(diagramType, planId, exerciseId) {
       var baseUrl = "{{ url_for('progress.overview') }}";
@@ -147,27 +156,21 @@
     var planSelect = document.getElementById("planSelect");
     var exerciseSelect = document.getElementById("exerciseSelect");
 
+    var planGroup = document.getElementById("planGroup");
+    var exerciseGroup = document.getElementById("exerciseGroup");
+
     // Diagrammtyp wechseln
     if (diagramTypeSelect) {
       diagramTypeSelect.addEventListener("change", function () {
         var type = this.value;
 
-        // Sichtbarkeit der Auswahlfelder umschalten
         if (type === "plan") {
-          if (document.getElementById("planGroup")) {
-            document.getElementById("planGroup").style.display = "";
-          }
-          if (document.getElementById("exerciseGroup")) {
-            document.getElementById("exerciseGroup").style.display = "none";
-          }
+          show(planGroup);
+          hide(exerciseGroup);
           navigate("plan", planSelect ? planSelect.value : "", null);
         } else {
-          if (document.getElementById("planGroup")) {
-            document.getElementById("planGroup").style.display = "none";
-          }
-          if (document.getElementById("exerciseGroup")) {
-            document.getElementById("exerciseGroup").style.display = "";
-          }
+          hide(planGroup);
+          show(exerciseGroup);
           navigate("exercise", null, exerciseSelect ? exerciseSelect.value : "");
         }
       });

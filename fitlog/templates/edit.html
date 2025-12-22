@@ -13,13 +13,13 @@
     <table id="dndTable" class="table-edit">
       <thead>
         <tr>
-          <th style="width:2rem;"></th>
+          <th class="col-drag"></th>
           <th>Übung</th>
-          <th style="width:8rem;">Sätze</th>
-          <th style="width:8rem;">Wdh.</th>
-          <th style="width:10rem;">Gewicht (kg)</th>
+          <th class="col-sets">Sätze</th>
+          <th class="col-reps">Wdh.</th>
+          <th class="col-weight">Gewicht (kg)</th>
           <th>Notiz</th>
-          <th style="width:3rem;"></th>
+          <th class="col-actions"></th>
         </tr>
       </thead>
       <tbody>
@@ -29,6 +29,7 @@
           <td class="cell-name">
             {{ it.name }}
             <input type="hidden" name="exercise_id[]" value="{{ it.exercise_id }}">
+            <input type="hidden" name="position[]" value="{{ loop.index }}">
           </td>
           <td><input class="input-num" type="number" name="default_sets[]" value="{{ it.default_sets or 3 }}" min="1"></td>
           <td><input class="input-num" type="number" name="default_reps[]" value="{{ it.default_reps or 10 }}" min="1"></td>
@@ -37,7 +38,6 @@
           <td>
             <button class="icon-btn" type="button" data-remove="{{ it.exercise_id }}" title="Aus Plan entfernen">✕</button>
           </td>
-          <input type="hidden" name="position[]" value="{{ loop.index }}">
         </tr>
         {% else %}
         <tr><td colspan="7" class="muted">Noch keine Übungen im Plan.</td></tr>

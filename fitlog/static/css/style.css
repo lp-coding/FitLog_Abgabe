@@ -83,6 +83,10 @@ main{
   box-shadow: var(--shadow);
 }
 
+.card-body { padding: var(--s-4); }
+
+.table-scroll { overflow-x: auto; }
+
 .btn, button{
   font: inherit;
 }
@@ -272,3 +276,19 @@ main{
 @media (min-width: 1100px){
   .progress-chart__img{ max-height: 480px; }
 }
+
+/* =========================
+   Utilities
+========================= */
+.is-hidden{
+  display: none !important;
+}
+
+/* =========================
+   Pages: Plan edit (edit.html) – Column widths (replaces inline styles)
+========================= */
+.table-edit th.col-drag{ width: 2rem; }
+.table-edit th.col-sets{ width: 8rem; }
+.table-edit th.col-reps{ width: 8rem; }
+.table-edit th.col-weight{ width: 10rem; }
+.table-edit th.col-actions{ width: 3rem; }
