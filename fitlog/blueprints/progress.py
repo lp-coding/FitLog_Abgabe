@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from fitlog.db import get_db
+from ..db import get_db
 
 progress_bp = Blueprint("progress", __name__, url_prefix="/progress")
 

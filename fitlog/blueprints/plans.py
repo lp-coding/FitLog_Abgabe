@@ -10,8 +10,7 @@ bp = Blueprint("plans", __name__, url_prefix="/plans")
 
 
 # -------------------------------------------------------------------
-# NEU/FEHLTE: Plan anlegen  -> Endpoint-Name: plans.create_plan
-# Wird u.a. von index.html und plans/list.html benutzt
+#
 # -------------------------------------------------------------------
 @bp.post("/create")
 def create_plan():
@@ -45,7 +44,7 @@ def edit_plan(plan_id: int):
         (plan_id,),
     ).fetchone()
     if not plan:
-        abort(404, "Plan nicht gefunden oder archiviert.")
+        abort(404, "Plan nicht gefunden oder gelöscht.")
 
     items = db.execute(
         """
