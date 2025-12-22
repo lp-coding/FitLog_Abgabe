@@ -21,9 +21,6 @@ def _utcnow_iso() -> str:
     )
 
 
-# ------------------------------
-# Loader
-# ------------------------------
 def _load_session(db: sqlite3.Connection, session_id: int) -> sqlite3.Row:
     """Load session header + plan name."""
     row = db.execute(
