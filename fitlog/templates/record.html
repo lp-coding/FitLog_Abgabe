@@ -110,7 +110,7 @@
     <div class="card-body">
       <div class="footer-bar">
         <div class="muted">
-          Tipp: Wenn du eine Übung ausgelassen hast, setze „Sätze“ auf 0.
+          Wenn eine Übung ausgelassen wurde, setze „Sätze“ einfach auf 0.
         </div>
 
         <div class="actions">
@@ -130,15 +130,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  // Clamp für Sätze (0..99)
-  document.addEventListener('input', (ev) => {
-    const el = ev.target;
-    if (el && el.name && el.name.endsWith('[sets]')) {
-      const v = Number(el.value || 0);
-      if (v < 0) el.value = 0;
-      if (v > 99) el.value = 99;
-    }
-  });
-</script>
+  <script src="{{ url_for('static', filename='js/record.js') }}" defer></script>
 {% endblock %}
+

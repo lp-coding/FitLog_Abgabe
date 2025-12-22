@@ -2,7 +2,13 @@
 {% block title %}Trainingsfortschritt{{ title_suffix or "" }}{% endblock %}
 
 {% block content %}
-<div class="progress-page card">
+<div class="progress-page card"
+     id="progressPage"
+     data-home-url="{{ url_for('index') }}"
+     data-overview-url="{{ url_for('progress.overview') }}"
+     data-plan-png-template="{{ url_for('progress.plan_png', plan_id=0) }}"
+     data-exercise-png-template="{{ url_for('progress.exercise_png', exercise_id=0) }}">
+
 
   <!-- Kopfbereich: App-Titel, Diagramm-Auswahl, Schließen -->
   <header class="progress-header">
@@ -106,117 +112,7 @@
   </footer>
 </div>
 
-<script>
-  (function () {
-    function goHome() {
-      window.location.href = "{{ url_for('index') }}";
-    }
-
-    var btnBack = document.getElementById("btnBack");
-    if (btnBack) {
-      btnBack.addEventListener("click", goHome);
-    }
-
-    var btnClose = document.getElementById("btnClose");
-    if (btnClose) {
-      btnClose.addEventListener("click", goHome);
-    }
-
-    function show(el){
-      if (el) el.classList.remove("is-hidden");
-    }
-    function hide(el){
-      if (el) el.classList.add("is-hidden");
-    }
-
-    // Hilfsfunktion: URL mit Parametern neu aufrufen
-    function navigate(diagramType, planId, exerciseId) {
-      var baseUrl = "{{ url_for('progress.overview') }}";
-      var params = new URLSearchParams();
-
-      if (diagramType) {
-        params.set("diagram_type", diagramType);
-      }
-
-      if (diagramType === "plan" && planId) {
-        params.set("plan_id", planId);
-      } else if (diagramType === "exercise" && exerciseId) {
-        params.set("exercise_id", exerciseId);
-      }
-
-      var target = baseUrl;
-      var query = params.toString();
-      if (query) {
-        target += "?" + query;
-      }
-      window.location.href = target;
-    }
-
-    var diagramTypeSelect = document.getElementById("diagramType");
-    var planSelect = document.getElementById("planSelect");
-    var exerciseSelect = document.getElementById("exerciseSelect");
-
-    var planGroup = document.getElementById("planGroup");
-    var exerciseGroup = document.getElementById("exerciseGroup");
-
-    // Diagrammtyp wechseln
-    if (diagramTypeSelect) {
-      diagramTypeSelect.addEventListener("change", function () {
-        var type = this.value;
-
-        if (type === "plan") {
-          show(planGroup);
-          hide(exerciseGroup);
-          navigate("plan", planSelect ? planSelect.value : "", null);
-        } else {
-          hide(planGroup);
-          show(exerciseGroup);
-          navigate("exercise", null, exerciseSelect ? exerciseSelect.value : "");
-        }
-      });
-    }
-
-    // Auswahl des Trainingsplans
-    if (planSelect) {
-      planSelect.addEventListener("change", function () {
-        var diagramType = diagramTypeSelect ? diagramTypeSelect.value : "plan";
-        navigate(diagramType, this.value, null);
-      });
-    }
-
-    // Auswahl der Übung
-    if (exerciseSelect) {
-      exerciseSelect.addEventListener("change", function () {
-        var diagramType = diagramTypeSelect ? diagramTypeSelect.value : "exercise";
-        navigate(diagramType, null, this.value);
-      });
-    }
-
-    // PNG als Download anbieten
-    var btnExport = document.getElementById("btnExport");
-    if (btnExport) {
-      btnExport.addEventListener("click", function () {
-        var diagramType = diagramTypeSelect ? diagramTypeSelect.value : "plan";
-
-        if (diagramType === "plan") {
-          var pid = planSelect ? planSelect.value : "";
-          if (!pid) {
-            return;
-          }
-          window.location.href =
-            "{{ url_for('progress.plan_png', plan_id=0) }}".replace("0", pid) +
-            "?download=1";
-        } else {
-          var eid = exerciseSelect ? exerciseSelect.value : "";
-          if (!eid) {
-            return;
-          }
-          window.location.href =
-            "{{ url_for('progress.exercise_png', exercise_id=0) }}".replace("0", eid) +
-            "?download=1";
-        }
-      });
-    }
-  })();
-</script>
+{% endblock %}
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/progress.js') }}" defer></script>
 {% endblock %}
