@@ -13,10 +13,6 @@
   <!-- Kopfbereich: App-Titel, Diagramm-Auswahl, Schließen -->
   <header class="progress-header">
     <div class="progress-header__left">
-      <div class="progress-app-title">
-        FitLog – Der Trainingsplantracker
-      </div>
-
       <div class="progress-row">
         <label for="diagramType">Diagramm</label>
         <select id="diagramType" class="progress-select">
@@ -31,14 +27,6 @@
         </select>
       </div>
 
-      <div class="progress-plan-title">
-        {% if diagram_type == "plan" %}
-          Trainingsfortschritt{% if selected_plan_name %} – {{ selected_plan_name }}{% endif %}
-        {% else %}
-          Übungsverlauf{% if selected_exercise_name %} – {{ selected_exercise_name }}{% endif %}
-        {% endif %}
-      </div>
-    </div>
 
     <button type="button" class="btn btn--outline progress-close" id="btnClose">
       X

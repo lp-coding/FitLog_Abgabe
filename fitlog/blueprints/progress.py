@@ -119,7 +119,7 @@ def _png_response(fig, download_filename: Optional[str] = None) -> Response:
 
 
 @progress_bp.get("/")
-def overview() -> Response:
+def overview():
     db = get_db()
 
     plans = db.execute(

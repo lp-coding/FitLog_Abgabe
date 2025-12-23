@@ -59,7 +59,7 @@
     }
 
     const exId = btn.getAttribute("data-remove");
-    if (!confirm("Übung aus dem Plan entfernen? (Historie bleibt erhalten)")) return;
+    if (!confirm("Übung aus dem Plan entfernen?")) return;
 
     const res = await fetch(removeUrl, {
       method: "POST",
