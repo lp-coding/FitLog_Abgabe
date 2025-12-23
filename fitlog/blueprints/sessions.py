@@ -136,16 +136,13 @@ def _upsert_entries(db: sqlite3.Connection, session_id: int, form: Dict[str, Any
         except ValueError:
             return None
 
-    exercise_ids = [
-        int(x)
-        for x in request.form.getlist("exercise_id")
-        if str(x).isdigit()
-    ]
+    exercise_ids = [int(x) for x in request.form.getlist("exercise_id") if str(x).isdigit()]
 
     for ex_id in exercise_ids:
         sets_val = to_int(get(f"ex[{ex_id}][sets]"))
         reps = to_int(get(f"ex[{ex_id}][reps]"))
         weight = to_float(get(f"ex[{ex_id}][weight]"))
+        note = get(f"ex[{ex_id}][note]")
 
         # "Übung ausgelassen": sets explizit 0 -> Eintrag entfernen (falls vorhanden)
         if sets_val == 0:
@@ -155,18 +152,41 @@ def _upsert_entries(db: sqlite3.Connection, session_id: int, form: Dict[str, Any
             )
             continue
 
-        # Upsert (note bleibt unverändert, da Record-UI keine Note editiert)
         db.execute(
             """
-            INSERT INTO session_entries (session_id, exercise_id, weight_kg, reps, sets, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO session_entries (session_id, exercise_id, weight_kg, reps, sets, note, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(session_id, exercise_id) DO UPDATE SET
               weight_kg  = excluded.weight_kg,
               reps       = excluded.reps,
               sets       = excluded.sets,
+              note       = excluded.note,
               created_at = excluded.created_at
             """,
-            (session_id, ex_id, weight, reps, sets_val, _utcnow_iso()),
+            (session_id, ex_id, weight, reps, sets_val, note, _utcnow_iso()),
+        )
+
+
+def _update_plan_notes_from_form(
+    db: sqlite3.Connection, plan_id: int, form: Dict[str, Any]
+) -> None:
+    """Übernimmt Notizen aus dem Record-Formular dauerhaft in den Trainingsplan."""
+
+    def get(key: str) -> str:
+        return str(form.get(key) or "").strip()
+
+    exercise_ids = [int(x) for x in request.form.getlist("exercise_id") if str(x).isdigit()]
+
+    for ex_id in exercise_ids:
+        note = get(f"ex[{ex_id}][note]")
+        db.execute(
+            """
+            UPDATE plan_exercises
+               SET note = ?
+             WHERE plan_id = ?
+               AND exercise_id = ?
+            """,
+            (note, plan_id, ex_id),
         )
 
 
@@ -215,6 +235,7 @@ def finish_session(session_id: int):
     sess = _load_session(db, session_id)
 
     _upsert_entries(db, session_id, request.form)
+    _update_plan_notes_from_form(db, sess["plan_id"], request.form)
 
     raw_minutes = (request.form.get("duration_minutes") or "").strip()
     mins = 0.0

@@ -91,11 +91,11 @@
             </td>
 
             <td>
-              {% if item.note %}
-                {{ item.note }}
-              {% else %}
-                <span class="muted">–</span>
-              {% endif %}
+              <input class="input-note"
+                     type="text"
+                     name="ex[{{ item.exercise_id }}][note]"
+                     value="{{ item.note or '' }}"
+                     placeholder="…">
             </td>
           </tr>
           {% else %}
@@ -132,4 +132,3 @@
 {% block extra_js %}
   <script src="{{ url_for('static', filename='js/record.js') }}" defer></script>
 {% endblock %}
-
