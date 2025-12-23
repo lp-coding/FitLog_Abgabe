@@ -9,10 +9,10 @@
 
 <body>
   <header>
-    <h1>FitLog</h1>
+    <h1 class="container">FitLog</h1>
   </header>
 
-  <main>
+  <main class="container">
     {% with msgs = get_flashed_messages(with_categories=true) %}
       {% if msgs %}
         <div class="flash-container">
