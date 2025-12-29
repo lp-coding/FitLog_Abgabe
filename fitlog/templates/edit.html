@@ -3,15 +3,17 @@
 
 {% block content %}
 <div class="plan-edit">
+  <div class="card">
+    <div class="card-body">
 
-  <div class="plan-header">
-    <input class="plan-name-input" type="text" name="plan_name" value="{{ plan.name }}" form="edit-form" placeholder="Planname">
-  </div>
+      <div class="plan-header">
+        <input class="plan-name-input" type="text" name="plan_name" value="{{ plan.name }}" form="edit-form" placeholder="Planname">
+      </div>
 
-  <form id="edit-form" action="{{ url_for('plans.update_plan', plan_id=plan.id) }}" method="post">
-    <table id="dndTable"
-           class="table-edit"
-           data-remove-url="{{ url_for('plans.remove_exercise', plan_id=plan.id) }}">
+      <form id="edit-form" action="{{ url_for('plans.update_plan', plan_id=plan.id) }}" method="post">
+        <table id="dndTable"
+               class="table-edit"
+               data-remove-url="{{ url_for('plans.remove_exercise', plan_id=plan.id) }}">
       <thead>
         <tr>
           <th class="col-drag"></th>
@@ -64,6 +66,9 @@
     </div>
   </div>
 </div>
+  </div>
+  </div>
+  </div>
 
 {% endblock %}
 {% block extra_js %}
