@@ -63,15 +63,6 @@
         {% endfor %}
       </select>
     </div>
-
-    <div class="progress-controls__actions">
-      <button type="button"
-              class="btn btn-primary"
-              id="btnExport"
-              {% if not image_url %}disabled aria-disabled="true"{% endif %}>
-        Export (PNG)
-      </button>
-    </div>
   </section>
 
   <!-- Diagramm-Bereich -->
@@ -89,9 +80,18 @@
 
   <!-- Fußbereich: Zurück-Button -->
   <footer class="progress-footer">
+  <div class="actions">
     <button type="button" class="btn btn-secondary" id="btnBack">
       Zurück
     </button>
+
+     <button type="button"
+            class="btn btn-primary"
+            id="btnExport"
+            {% if not image_url %}disabled aria-disabled="true"{% endif %}>
+      Export (PNG)
+     </button>
+   </div>
   </footer>
 </div>
 
