@@ -110,6 +110,11 @@ main{
 .btn:hover{ filter: brightness(.98); }
 .btn:disabled{ opacity: .55; cursor: not-allowed; }
 
+a.btn{
+  text-decoration: none;
+  color: inherit;
+}
+
 .btn-primary{
   background: var(--primary);
   color: var(--primary-contrast);
