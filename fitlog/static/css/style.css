@@ -138,7 +138,8 @@ main{
 .input-num,
 .input-note,
 .input-select,
-.plan-name-input{
+.plan-name-input,
+.progress-select{
   font: inherit;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -248,6 +249,16 @@ main{
 ========================= */
 .progress-header{
   position: relative;              /* wichtig für absolute Position des X */
+}
+
+/* Label + Select sauber ausrichten */
+.progress-row,
+.progress-control-group{
+  display: grid;
+  grid-template-columns: 140px 1fr; /* <- Label-Spalte fix, Select-Spalte flexibel */
+  align-items: center;
+  column-gap: var(--s-3);
+  margin: var(--s-3) var(--s-4);
 }
 
 .progress-close{
