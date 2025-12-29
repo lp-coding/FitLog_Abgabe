@@ -3,18 +3,6 @@
 
 {% block content %}
 <div class="plan-edit">
-
-  <div class="plan-header">
-    <div class="col">
-      <strong>Training erfassen</strong>
-      <span class="muted">{{ sess.plan_name }}</span>
-    </div>
-    <a class="icon-btn"
-       href="{{ url_for('index') }}"
-       title="Schließen"
-       aria-label="Schließen">×</a>
-  </div>
-
   <form method="post"
         action="{{ url_for('sessions.finish_session', session_id=sess.id) }}"
         class="card">

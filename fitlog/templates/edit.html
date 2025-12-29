@@ -6,7 +6,6 @@
 
   <div class="plan-header">
     <input class="plan-name-input" type="text" name="plan_name" value="{{ plan.name }}" form="edit-form" placeholder="Planname">
-    <a class="icon-btn close-btn" href="{{ url_for('index') }}" title="Ohne Speichern schließen" aria-label="Schließen">×</a>
   </div>
 
   <form id="edit-form" action="{{ url_for('plans.update_plan', plan_id=plan.id) }}" method="post">
