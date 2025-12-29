@@ -6,6 +6,9 @@ def init_db():
     db_path = Path("instance/fitlog.db")
     sql_path = Path("instance/init_db.sql")
 
+    # Ordner anlegen, falls er fehlt
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
     print(f'Datenbank wird unter "{db_path.resolve()}" initialisiert.')
 
     with sqlite3.connect(db_path) as connection:
