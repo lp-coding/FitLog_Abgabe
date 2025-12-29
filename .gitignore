@@ -8,10 +8,6 @@ __pycache__/
 venv/
 env/
 
-# Flask instance (DB + secrets)
-instance/
-!instance/.gitkeep
-
 # DB (SQLite)
 *.db
 *.sqlite3
