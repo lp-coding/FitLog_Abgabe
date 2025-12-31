@@ -1,23 +1,16 @@
-"""
-Seed-Skript für FitLog.
+"""seed.py
 
-Dieses Skript fügt typische Fitnessstudio-Übungen in die Tabelle `exercises` ein.
-
-Ausführung:
-    python seed.py
-
-Voraussetzung:
-    - Die Datenbank wurde vorher mit `init_db.py` und `instance/init_db.sql`
-      initialisiert.
+Dieses Modul befüllt die Tabellen `exercises` und `training_plans` mit Beispieldaten.
 """
 
 import sqlite3
+from sqlite3 import Connection
 from pathlib import Path
 
-# Pfad zur SQLite-Datenbank – konsistent zu init_db.py / create_app
+# Pfad zur SQLite Datenbank
 DB_PATH = Path("instance/fitlog.db")
 
-# Typische Studio-Übungen (deutschsprachige Namen)
+# Typische Fitness Übungen
 EXERCISES = [
     "Kniebeugen",
     "Beinpresse",
@@ -35,12 +28,18 @@ EXERCISES = [
     "Crunches",
 ]
 
+# Beispiel Trainingspläne
 PLANS = ["Oberkörper", "Beine", "Ganzkörper"]
 
-def seed_exercises_plans(conn):
-    """Fügt typische Übungen in `exercises` ein (idempotent)."""
+def seed_exercises_plans(conn: Connection) -> None:
+    """Fügt Übungen und Trainingspläne in die Datenbank ein.
+
+        conn -- für die DB Connection benötigt.
+    """
+    # Für SQLite Foreign Keys explizit aktivieren.
     conn.execute("PRAGMA foreign_keys = ON;")
 
+    # `INSERT OR IGNORE` verhindern Duplikate, sodass das Skript auch mehrfach ausgeführt werden könnte.
     for name in EXERCISES:
         conn.execute(
             "INSERT OR IGNORE INTO exercises (name) VALUES (?)",
@@ -53,14 +52,16 @@ def seed_exercises_plans(conn):
             (plan,),
         )
 
+    # Ausgabe für den Nutzer, ob Daten jetzt vorhanden sind.
     count_exercises = conn.execute("SELECT COUNT(*) FROM exercises").fetchone()[0]
     count_plans = conn.execute("SELECT COUNT(*) FROM training_plans").fetchone()[0]
 
     print(f"Tabelle `exercises` enthält jetzt {count_exercises} Übungen.")
-    print(f"Tabelle `training_plans` enthält jetzt {count_plans} Übungen.")
+    print(f"Tabelle `training_plans` enthält jetzt {count_plans} Pläne.")
 
 
 def main() -> None:
+    """Einstiegspunkt um die DB zu prüfen, Daten einzufügen und Verbindung zu schließen."""
     if not DB_PATH.exists():
         print(f"Datenbank '{DB_PATH}' existiert nicht.")
         print("Bitte zuerst `python init_db.py` ausführen.")
@@ -72,7 +73,7 @@ def main() -> None:
     try:
         seed_exercises_plans(conn)
         conn.commit()
-        print("Seeding abgeschlossen.")
+        print("Einfügen der Beispieldaten abgeschlossen.")
     finally:
         conn.close()
 
