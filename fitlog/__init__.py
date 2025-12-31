@@ -7,10 +7,10 @@ Hier wird die Anwendung zentral erzeugt und je nach Bedarf konfiguriert.
 from flask import Flask, render_template
 
 
-def create_app():
+def create_app() -> Flask:
     """Erzeugt und konfiguriert die App.
 
-        return -- konfigurierte Flask App mit registrierten Blueprints und dem DB Teardown
+        return -- konfigurierte Flask App mit registrierten Blueprints und DB (Datenbank) Teardown
     """
     app = Flask(__name__)
 
