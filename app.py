@@ -1,4 +1,4 @@
-"""Der zentrale Einstiegspunkt für FitLog.
+""" Der zentrale Einstiegspunkt für FitLog.
 
 Die Flask Anwendung wird hier über die Application Factory `create_app()` erstellt.
 Anschließend wird der Server gestartet.
