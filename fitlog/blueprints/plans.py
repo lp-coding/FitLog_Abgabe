@@ -1,7 +1,8 @@
 """plans.py
 
-Dieses Modul legt alle Routen für das Verwalten von Trainingsplänen fest:
+Dieses Modul legt alle Routen für das Verwalten von Trainingsplänen fest.
 
+Routen:
 - Plan anlegen /plans/create
 - Plan bearbeiten /plans/<id>/edit
 - Plan speichern /plans/<id>/update
@@ -21,8 +22,7 @@ bp = Blueprint("plans", __name__, url_prefix="/plans")
 
 
 def _utcnow_iso() -> str:
-    """Gibt einen String mit Zeitstempel im Format: 2025-12-31T14:23:07 zurück.
-    """
+    """Gibt einen String mit Zeitstempel im Format: 2025-12-31T14:23:07 zurück."""
     return (
         datetime.now(timezone.utc)
         .replace(microsecond=0, tzinfo=None)
@@ -33,7 +33,7 @@ def _utcnow_iso() -> str:
 def _load_active_plan(db: Connection, plan_id: int) -> sqlite3.Row:
     """Lädt einen aktiven Trainingsplan oder bricht mit HTTP 404 ab.
 
-        db -- offene SQLite-Connection
+        db -- für die DB Connection
         plan_id -- ID des gewünschten Plans
 
         return -- Datensatz (id, name) des aktiven Plans

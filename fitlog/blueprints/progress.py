@@ -2,6 +2,7 @@
 
 Dieses Modul stellt den Trainingsfortschritt bereit.
 
+Routen:
 - Auswertungsseite /progress/
 - Für einen ausgewählten Plan wird das aktuelle Gewicht pro enthaltene Übung in einem Balkendiagramm dargestellt:
     /progress/plan/<id>/png
