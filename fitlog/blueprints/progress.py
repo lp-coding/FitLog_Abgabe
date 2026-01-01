@@ -1,20 +1,35 @@
+"""progress.py
+
+Dieses Modul stellt den Trainingsfortschritt bereit.
+
+- Auswertungsseite /progress/
+- Für einen ausgewählten Plan wird das aktuelle Gewicht pro enthaltene Übung in einem Balkendiagramm dargestellt:
+    /progress/plan/<id>/png
+- Für eine ausgewählte Übung kann die Entwicklung der Trainingsgewichte in einem Liniendiagramm visualisiert werden:
+    /progress/exercise/<id>/png
+
+Die Diagramme werden mit Matplotlib als PNG erstellt und im Browser angezeigt.
+"""
 import io
 from datetime import datetime
 from typing import List, Optional, Tuple
-
 import matplotlib
-
+# Nutzt headless Modus, um Diagramme ohne GUI als PNG zu rendern.
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
+import matplotlib.pyplot as plt
 from flask import Blueprint, Response, abort, render_template, request, url_for
-
 from ..db import get_db
 
+# Alle Endpunkte sind unter /progress/... erreichbar
 progress_bp = Blueprint("progress", __name__, url_prefix="/progress")
 
 
 def _fetch_plan_name(plan_id: int) -> Optional[str]:
+    """Liest den Namen eines aktiven Trainingsplans aus der DB.
+
+        plan_id -- ID des Plans
+        return -- Planname oder None, wenn nicht vorhanden bzw. gelöscht.
+    """
     db = get_db()
     row = db.execute(
         "SELECT name FROM training_plans WHERE id = ? AND deleted_at IS NULL",
@@ -24,18 +39,28 @@ def _fetch_plan_name(plan_id: int) -> Optional[str]:
 
 
 def _fetch_exercise_name(exercise_id: int) -> Optional[str]:
+    """Liest den Namen einer Übung aus der DB.
+
+        exercise_id -- ID der Übung
+        return -- Übungsname oder None, wenn nicht vorhanden
+    """
     db = get_db()
     row = db.execute("SELECT name FROM exercises WHERE id = ?", (exercise_id,)).fetchone()
     return row["name"] if row else None
 
 
 def _fetch_plan_exercises_with_latest_weight(plan_id: int) -> List[Tuple[str, float]]:
-    """
-    Liefert Liste von (exercise_name, latest_weight_kg) für alle Übungen eines Plans.
-    Fallback, wenn keine Historie: plan_exercises.default_weight_kg.
+    """Ermittelt pro Übung eines Plans das aktuelle Gewicht für das Balkendiagramm.
+
+    - Wenn es Trainingshistorie gibt: letztes erfasstes Gewicht aus `session_entries`
+    - Fallback: `plan_exercises.default_weight_kg` für noch nie trainierte Übungen
+
+        plan_id -- ID des Trainingsplans
+        return -- Liste von (exercise_name, latest_weight_kg)
     """
     db = get_db()
 
+    # Reihenfolge ist erst nach Position, dann alphabetisch ohne Beachtung der Groß- und Kleinschreibung.
     plan_rows = db.execute(
         """
         SELECT
@@ -56,6 +81,7 @@ def _fetch_plan_exercises_with_latest_weight(plan_id: int) -> List[Tuple[str, fl
         ex_name = r["exercise_name"]
         default_weight = float(r["default_weight_kg"] or 0)
 
+        # Letztes Gewicht dieser Übung im Plan suchen (nach Zeitstempel absteigend).
         rec = db.execute(
             """
             SELECT se.weight_kg
@@ -77,8 +103,13 @@ def _fetch_plan_exercises_with_latest_weight(plan_id: int) -> List[Tuple[str, fl
 
 
 def _fetch_exercise_history(exercise_id: int) -> List[Tuple[str, float]]:
-    """
-    Historie einer Übung abrufen: Liste von (YYYY-MM-DD, weight_kg).
+    """Liest den Gewichtsverlauf einer Übung aus der DB.
+
+    Es wird pro Eintrag ein Datum (YYYY-MM-DD) und das erfasste Gewicht zurückgegeben.
+    Als Datum wird der erste verfügbare Zeitstempel genutzt (created_at / ended_at / started_at).
+
+        exercise_id -- ID der Übung
+        return -- Liste von (YYYY-MM-DD, weight_kg)
     """
     db = get_db()
     rows = db.execute(
@@ -103,13 +134,23 @@ def _fetch_exercise_history(exercise_id: int) -> List[Tuple[str, float]]:
 
 
 def _png_response(fig, download_filename: Optional[str] = None) -> Response:
+    """Gibt eine Matplotlib Figure als PNG zurück.
+
+        fig -- Matplotlib Figure
+        download_filename -- optional für Dateiname bei Download
+
+        return -- Flask Response mit image/png
+    """
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
+
+    # Schließen, um Speicherverbrauch bei vielen Requests zu vermeiden.
     plt.close(fig)
     buf.seek(0)
 
     headers = {}
     if download_filename:
+        # Einfache Absicherung gegen kaputte Header durch Ersetzen von Anführungszeichen.
         safe = download_filename.replace('"', "'")
         headers["Content-Disposition"] = f'attachment; filename="{safe}"'
 
@@ -118,6 +159,7 @@ def _png_response(fig, download_filename: Optional[str] = None) -> Response:
 
 @progress_bp.get("/")
 def overview():
+    """Auswertungsseite: Auswahl von Diagrammtyp und Bezug. Je nach Typ entweder Plan oder Übung."""
     db = get_db()
 
     plans = db.execute(
@@ -127,6 +169,7 @@ def overview():
         "SELECT id, name FROM exercises ORDER BY name COLLATE NOCASE"
     ).fetchall()
 
+    # steuert, ob ein Plan- oder Übungsdiagramm angezeigt wird.
     diagram_type = request.args.get("diagram_type", "plan")
     if diagram_type not in ("plan", "exercise"):
         diagram_type = "plan"
@@ -139,6 +182,7 @@ def overview():
     selected_plan_name: Optional[str] = None
     selected_exercise_name: Optional[str] = None
 
+    # Je nach Auswahl wird die passende Route als <img> Quelle verwendet.
     if diagram_type == "plan" and selected_plan_id:
         selected_plan_name = _fetch_plan_name(selected_plan_id)
         if selected_plan_name:
@@ -171,6 +215,7 @@ def overview():
 
 @progress_bp.get("/plan/<int:plan_id>/png")
 def plan_png(plan_id: int):
+    """Erzeugt das Balkendiagramm "aktuelles Gewicht pro Übung" für einen Plan."""
     plan_name = _fetch_plan_name(plan_id)
     if not plan_name:
         abort(404, "Plan nicht gefunden!")
@@ -179,6 +224,7 @@ def plan_png(plan_id: int):
     labels = [name for name, _ in data]
     values = [val for _, val in data]
 
+    # Größe so gewählt, dass Labels noch lesbar bleiben.
     fig, ax = plt.subplots(figsize=(7.5, 3.8), dpi=140)
 
     if values:
@@ -193,6 +239,7 @@ def plan_png(plan_id: int):
     ax.grid(axis="y", linestyle=":", alpha=0.4)
     plt.tight_layout()
 
+    # Optionaler Download durch anhängen von /png?download=1
     download = request.args.get("download", type=int) == 1
     filename = f"progress_plan_{plan_name}.png" if download else None
     return _png_response(fig, filename)
@@ -200,11 +247,14 @@ def plan_png(plan_id: int):
 
 @progress_bp.get("/exercise/<int:exercise_id>/png")
 def exercise_png(exercise_id: int):
+    """Erzeugt das Liniendiagramm „Gewicht über Zeit“ für eine Übung."""
     exercise_name = _fetch_exercise_name(exercise_id)
     if not exercise_name:
         abort(404, "Übung nicht gefunden!")
 
     history = _fetch_exercise_history(exercise_id)
+
+    # Datumsstrings werden für die Achse in date Objekte umgewandelt.
     dates = [datetime.strptime(day, "%Y-%m-%d").date() for day, _ in history]
     weights = [w for _, w in history]
 

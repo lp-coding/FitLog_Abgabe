@@ -1,4 +1,4 @@
-from __future__ import annotations
+
 
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
@@ -8,6 +8,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, abort,
 
 from ..db import get_db
 
+# Alle Endpunkte sind unter /sessions/... erreichbar
 bp = Blueprint("sessions", __name__, url_prefix="/sessions")
 
 
