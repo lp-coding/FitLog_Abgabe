@@ -33,10 +33,10 @@ def _utcnow_iso() -> str:
 def _load_active_plan(db: Connection, plan_id: int) -> sqlite3.Row:
     """Lädt einen aktiven Trainingsplan oder bricht mit HTTP 404 ab.
 
-        db -- für die DB Connection
+        db      -- für die DB Connection
         plan_id -- ID des gewünschten Plans
 
-        return -- Datensatz (id, name) des aktiven Plans
+        returns -- Datensatz (id, name) des aktiven Plans
     """
     # deleted_at = NULL bedeutet, dass der Plan aktiv ist.
     plan = db.execute(
@@ -74,7 +74,10 @@ def create_plan():
 
 @bp.get("/<int:plan_id>/edit")
 def edit_plan(plan_id: int):
-    """Zeigt die Bearbeitungsansicht eines Plans inklusive enthaltener Übungen."""
+    """Zeigt die Bearbeitungsansicht eines Plans inklusive enthaltener Übungen.
+
+    plan_id -- Primärschlüssel des zu bearbeitenden Plans
+    """
     db = get_db()
     plan = _load_active_plan(db, plan_id)
 
@@ -106,7 +109,10 @@ def edit_plan(plan_id: int):
 
 @bp.post("/<int:plan_id>/update")
 def update_plan(plan_id: int):
-    """Speichert folgende Änderungen am Plan: Name, neue Default-Werte sowie Notizen pro Übung."""
+    """Speichert folgende Änderungen am Plan: Name, neue Default-Werte sowie Notizen pro Übung.
+
+    plan_id -- Primärschlüssel des zu bearbeitenden Plans
+    """
     db = get_db()
     _ = _load_active_plan(db, plan_id)
 
@@ -156,7 +162,10 @@ def update_plan(plan_id: int):
 
 @bp.post("/<int:plan_id>/add-exercise")
 def add_exercise(plan_id: int):
-    """Fügt eine Übung zu einem Plan hinzu. Diese wird standardmäßig am Ende einsortiert."""
+    """Fügt eine Übung zu einem Plan hinzu. Diese wird standardmäßig am Ende einsortiert.
+
+    plan_id -- Primärschlüssel des zu bearbeitenden Plans
+    """
     db = get_db()
     _ = _load_active_plan(db, plan_id)
 
@@ -194,7 +203,10 @@ def add_exercise(plan_id: int):
 
 @bp.post("/<int:plan_id>/remove-exercise")
 def remove_exercise(plan_id: int):
-    """Entfernt eine Übung aus einem Plan."""
+    """Entfernt eine Übung aus einem Plan.
+
+    plan_id -- Primärschlüssel des betroffenen Plans
+    """
     db = get_db()
 
     exercise_id = request.form.get("exercise_id", type=int)
@@ -213,7 +225,10 @@ def remove_exercise(plan_id: int):
 
 @bp.post("/<int:plan_id>/delete")
 def delete_plan(plan_id: int):
-    """Archiviert einen Plan, indem `deleted_at` gesetzt wird."""
+    """Archiviert einen Plan, indem `deleted_at` gesetzt wird.
+
+    plan_id -- Primärschlüssel des zu archivierenden Plans
+    """
     db = get_db()
     plan = db.execute(
         "SELECT id, name, deleted_at FROM training_plans WHERE id = ?",
