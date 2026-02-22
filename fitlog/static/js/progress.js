@@ -1,3 +1,11 @@
+/**
+ * progress.js ist verantwortlich für die Fortschrittsseite (progress_plan.html).
+ *
+ * Verwaltet die Auswahl von Diagrammtypen Plan und Übung, sowie
+ * das passende Dropdown und den Export der PNG Datei.
+ * Bei jeder Änderung wird die Seite mit den neuen Parametern neu geladen.
+ */
+
 (() => {
   const page = document.getElementById("progressPage");
   if (!page) return;
@@ -7,6 +15,7 @@
   const planPngTemplate = page.dataset.planPngTemplate;         // enthält .../0
   const exercisePngTemplate = page.dataset.exercisePngTemplate; // enthält .../0
 
+  // Navigiert zurück zur Startseite.
   function goHome() {
     if (homeUrl) window.location.href = homeUrl;
   }
@@ -17,6 +26,7 @@
   const btnClose = document.getElementById("btnClose");
   if (btnClose) btnClose.addEventListener("click", goHome);
 
+  // Baut die URL mit den passenden Query Parametern und lädt die Seite dann neu.
   function navigate(diagramType, planId, exerciseId) {
     if (!overviewUrl) return;
 
@@ -37,6 +47,7 @@
   const planGroup = document.getElementById("planGroup");
   const exerciseGroup = document.getElementById("exerciseGroup");
 
+  // Den Diagrammtyp wechseln durch passendes Dropdown ein- bzw. ausblenden und Seite neu laden.
   if (diagramTypeSelect) {
     diagramTypeSelect.addEventListener("change", function () {
       const type = this.value;
@@ -53,6 +64,7 @@
     });
   }
 
+  // Auswahl vom Plan wurde geändert -> Seite mit neuer plan_id neu laden
   if (planSelect) {
     planSelect.addEventListener("change", function () {
       const diagramType = diagramTypeSelect ? diagramTypeSelect.value : "plan";
@@ -60,6 +72,7 @@
     });
   }
 
+  // Übungsauswahl ist geändert worden -> Seite mit neuer exercise_id neu laden
   if (exerciseSelect) {
     exerciseSelect.addEventListener("change", function () {
       const diagramType = diagramTypeSelect ? diagramTypeSelect.value : "exercise";
@@ -67,6 +80,7 @@
     });
   }
 
+  // Export der PNG mit ?download=1 herunterladen
   const btnExport = document.getElementById("btnExport");
   if (btnExport) {
     btnExport.addEventListener("click", function () {
