@@ -1,3 +1,12 @@
+/**
+ * edit.js ist verantwortlich für die Bearbeitungsseite vom Trainingsplan (edit.html).
+ *
+ * Funktionen:
+ * - Drag und drop zum Ändern der Reihenfolge der Übungen
+ * - Entfernen einzelner Übungen
+ * - "Übung hinzufügen" speichert erst den Plan, dann fügt es die Übung hinzu
+ */
+
 (() => {
   const table = document.getElementById("dndTable");
   const tbody = document.querySelector("#dndTable tbody");
@@ -6,6 +15,7 @@
   const removeUrl = table.dataset.removeUrl; // kommt aus data-remove-url im HTML
   let dragEl = null;
 
+  // Aktualisiert die versteckten position[] Felder.
   function updatePositions() {
     [...tbody.querySelectorAll("tr.dnd-row")].forEach((tr, i) => {
       const pos = tr.querySelector('input[name="position[]"]');
@@ -13,6 +23,8 @@
     });
   }
 
+  // Ermittelt das Element, VOR dem die gezogene Zeile eingefügt werden soll.
+  // Vergleicht die Position der Maus mit der Mitte jeder Zeile und wählt die nächstgelegene unterhalb des Cursors.
   function getDragAfterElement(container, y) {
     const els = [...container.querySelectorAll("tr.dnd-row:not(.is-dragging)")];
     return els.reduce(
@@ -26,6 +38,7 @@
     ).element;
   }
 
+  // Drag und drop Events
   tbody.addEventListener("dragstart", (e) => {
     const row = e.target.closest("tr.dnd-row");
     if (!row) return;
@@ -33,12 +46,14 @@
     row.classList.add("is-dragging");
   });
 
+  // Nach dem Loslassen Positionen neu nummerieren
   tbody.addEventListener("dragend", () => {
     if (dragEl) dragEl.classList.remove("is-dragging");
     dragEl = null;
     updatePositions();
   });
 
+  // Während des Ziehens wird Zeile an neue Position verschoben
   tbody.addEventListener("dragover", (e) => {
     e.preventDefault();
     const after = getDragAfterElement(tbody, e.clientY);
@@ -49,6 +64,7 @@
     else tbody.insertBefore(dragging, after);
   });
 
+  // Übung entfernen mit dem x-Button
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-remove]");
     if (!btn) return;
@@ -84,6 +100,7 @@
       if (addBtn) addBtn.disabled = true;
 
       try {
+        // Schritt 1: Aktuelle Änderungen am Plan speichern
         const saveRes = await fetch(editForm.action, {
           method: "POST",
           body: new FormData(editForm),
@@ -93,6 +110,7 @@
           return;
         }
 
+        // Schritt 2: Neue Übung zum Plan hinzufügen
         const addRes = await fetch(addForm.action, {
           method: "POST",
           body: new FormData(addForm),
@@ -110,6 +128,6 @@
       }
     });
   }
-
+  // Positionen initial setzen, wenn die Seite z.B. neu geladen wird
   updatePositions();
 })();
