@@ -1,7 +1,7 @@
 PRAGMA foreign_keys = ON;
 
 -- ============================
---  Trainingspläne (Soft-Delete)
+--  Trainingspläne (mit Soft-Delete)
 -- ============================
 CREATE TABLE IF NOT EXISTS training_plans (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,12 +27,12 @@ CREATE TABLE IF NOT EXISTS exercises (
 
 
 -- ============================
---  Zuordnung: Plan ↔ Übungen
+--  Zuordnung: Plan <-> Übungen
 -- ============================
 CREATE TABLE IF NOT EXISTS plan_exercises (
     plan_id            INTEGER NOT NULL,
     exercise_id        INTEGER NOT NULL,
-    position           INTEGER,                  -- Reihenfolge im Plan
+    position           INTEGER,
     default_sets       INTEGER DEFAULT 3,
     default_reps       INTEGER DEFAULT 10,
     default_weight_kg  REAL    DEFAULT 0,
@@ -44,12 +44,12 @@ CREATE TABLE IF NOT EXISTS plan_exercises (
 
 
 -- ============================
---  Trainings-Sessions (Kopf)
+--  Trainings-Sessions
 -- ============================
 CREATE TABLE IF NOT EXISTS sessions (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     plan_id    INTEGER NOT NULL,
-    started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, --alt: (datetime('now')) daher noch testen!
+    started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ended_at   TEXT,
     FOREIGN KEY (plan_id) REFERENCES training_plans(id) ON DELETE RESTRICT
 );
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS session_entries (
     reps        INTEGER,
     sets        INTEGER DEFAULT 3,
     note        TEXT,
-    created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, --alt: (datetime('now')) daher noch testen!
+    created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (session_id, exercise_id),
     FOREIGN KEY (session_id) REFERENCES sessions(id)   ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE RESTRICT,
