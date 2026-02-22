@@ -28,8 +28,8 @@ progress_bp = Blueprint("progress", __name__, url_prefix="/progress")
 def _fetch_plan_name(plan_id: int) -> Optional[str]:
     """Liest den Namen eines aktiven Trainingsplans aus der DB.
 
-        plan_id -- ID des Plans
-        return -- Planname oder None, wenn nicht vorhanden bzw. gelöscht.
+    plan_id -- ID des Plans
+    returns -- Planname oder None, wenn nicht vorhanden bzw. gelöscht.
     """
     db = get_db()
     row = db.execute(
@@ -42,8 +42,8 @@ def _fetch_plan_name(plan_id: int) -> Optional[str]:
 def _fetch_exercise_name(exercise_id: int) -> Optional[str]:
     """Liest den Namen einer Übung aus der DB.
 
-        exercise_id -- ID der Übung
-        return -- Übungsname oder None, wenn nicht vorhanden
+    exercise_id -- ID der Übung
+    returns -- Übungsname oder None, wenn nicht vorhanden
     """
     db = get_db()
     row = db.execute("SELECT name FROM exercises WHERE id = ?", (exercise_id,)).fetchone()
@@ -56,8 +56,8 @@ def _fetch_plan_exercises_with_latest_weight(plan_id: int) -> List[Tuple[str, fl
     - Wenn es Trainingshistorie gibt: letztes erfasstes Gewicht aus `session_entries`
     - Fallback: `plan_exercises.default_weight_kg` für noch nie trainierte Übungen
 
-        plan_id -- ID des Trainingsplans
-        return -- Liste von (exercise_name, latest_weight_kg)
+    plan_id -- ID des Trainingsplans
+    returns -- Liste von (exercise_name, latest_weight_kg)
     """
     db = get_db()
 
@@ -109,8 +109,8 @@ def _fetch_exercise_history(exercise_id: int) -> List[Tuple[str, float]]:
     Es wird pro Eintrag ein Datum (YYYY-MM-DD) und das erfasste Gewicht zurückgegeben.
     Als Datum wird der erste verfügbare Zeitstempel genutzt (created_at / ended_at / started_at).
 
-        exercise_id -- ID der Übung
-        return -- Liste von (YYYY-MM-DD, weight_kg)
+    exercise_id -- ID der Übung
+    returns     -- Liste von (YYYY-MM-DD, weight_kg)
     """
     db = get_db()
     rows = db.execute(
@@ -137,10 +137,10 @@ def _fetch_exercise_history(exercise_id: int) -> List[Tuple[str, float]]:
 def _png_response(fig, download_filename: Optional[str] = None) -> Response:
     """Gibt eine Matplotlib Figure als PNG zurück.
 
-        fig -- Matplotlib Figure
-        download_filename -- optional für Dateiname bei Download
+    fig               -- Matplotlib Figure
+    download_filename -- optional für Dateiname bei Download
 
-        return -- Flask Response mit image/png
+    returns           -- Flask Response mit image/png
     """
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
@@ -216,7 +216,10 @@ def overview():
 
 @progress_bp.get("/plan/<int:plan_id>/png")
 def plan_png(plan_id: int):
-    """Erzeugt das Balkendiagramm "aktuelles Gewicht pro Übung" für einen Plan."""
+    """Erzeugt das Balkendiagramm "aktuelles Gewicht pro Übung" für einen Plan.
+
+    plan_id -- Primärschlüssel des darzustellenden Plans
+    """
     plan_name = _fetch_plan_name(plan_id)
     if not plan_name:
         abort(404, "Plan nicht gefunden!")
@@ -248,7 +251,10 @@ def plan_png(plan_id: int):
 
 @progress_bp.get("/exercise/<int:exercise_id>/png")
 def exercise_png(exercise_id: int):
-    """Erzeugt das Liniendiagramm „Gewicht über Zeit“ für eine Übung."""
+    """Erzeugt das Liniendiagramm „Gewicht über Zeit“ für eine Übung.
+
+    exercise_id -- Primärschlüssel der darzustellenden Übung
+    """
     exercise_name = _fetch_exercise_name(exercise_id)
     if not exercise_name:
         abort(404, "Übung nicht gefunden!")
