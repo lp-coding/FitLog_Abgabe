@@ -10,4 +10,4 @@ app = create_app()
 
 if __name__ == "__main__":
     # Die App wird lokal (127.0.0.1) auf Port 5000 im Debug-Modus gestartet.
-    app.run(host="127.0.0.1", port=5000,debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)

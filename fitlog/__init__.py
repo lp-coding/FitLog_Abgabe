@@ -10,7 +10,7 @@ from flask import Flask, render_template
 def create_app() -> Flask:
     """Erzeugt und konfiguriert die App.
 
-        return -- konfigurierte Flask App mit registrierten Blueprints und DB (Datenbank) Teardown
+    returns -- konfigurierte Flask App mit registrierten Blueprints und DB (Datenbank) Teardown
     """
     app = Flask(__name__)
 

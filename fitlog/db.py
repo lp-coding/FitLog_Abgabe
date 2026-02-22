@@ -15,7 +15,7 @@ from flask import current_app, g
 def get_db() -> Connection:
     """Liefert pro Request genau eine Connection.
 
-        return -- gibt die SQLite Connection für aktuellen Request zurück
+    returns -- gibt die SQLite Connection für aktuellen Request zurück
     """
 
     # Connection pro Request nur einmal öffnen und in `g` ablegen.
@@ -35,7 +35,7 @@ def get_db() -> Connection:
 def close_db(e: Exception | None = None) -> None:
     """Schließt die DB-Connection am Ende des Requests.
 
-        e -- Fehler beim Teardown. (kann optional noch behandelt werden)
+    e -- Fehler beim Teardown. (kann optional noch behandelt werden)
     """
 
     # Connection aus `g` entfernen und schließen, sofern vorhanden

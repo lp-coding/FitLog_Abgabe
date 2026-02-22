@@ -34,7 +34,7 @@ PLANS = ["Oberkörper", "Beine", "Ganzkörper"]
 def seed_exercises_plans(conn: Connection) -> None:
     """Fügt Übungen und Trainingspläne in die Datenbank ein.
 
-        conn -- für die DB Connection benötigt.
+    conn -- für die DB Connection benötigt.
     """
     # Für SQLite Foreign Keys explizit aktivieren.
     conn.execute("PRAGMA foreign_keys = ON;")
