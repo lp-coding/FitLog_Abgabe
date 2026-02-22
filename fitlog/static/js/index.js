@@ -1,3 +1,11 @@
+/**
+ * index.js ist verantwortlich für die Startseite (index.html).
+ *
+ * Verwaltet die Plan-Auswahlliste und die Buttons:
+ * Erfassen, Bearbeiten, Löschen, Hinzufügen und Fortschritt.
+ * Die URLs werden dafür über data-Attribute aus dem HTML gelesen.
+ */
+
 ( () => {
   const list = document.getElementById("planList");
   const btnRecord = document.getElementById("btnRecord");
@@ -6,6 +14,7 @@
   const btnDelete = document.getElementById("btnDelete");
   const btnAdd = document.getElementById("btnAdd");
 
+  // Gibt die ID des aktuell ausgewählten Plans zurück oder null.
   const selId = () => (list && list.value ? list.value : null);
 
   function updateRecordButton() {
@@ -14,6 +23,7 @@
     btnRecord.disabled = !hasSel;
   }
 
+  // Aktiviert den "Erfassen"-Button nur, wenn ein Plan ausgewählt ist.
   updateRecordButton();
 
   if (list) list.addEventListener("change", updateRecordButton);
