@@ -19,9 +19,8 @@
   --s-8: 2rem;
 }
 
-/* =========================
-   Base / Reset
-========================= */
+
+/* Basis + Reset */
 *{ box-sizing: border-box; }
 html, body{ height: 100%; }
 body{
@@ -54,7 +53,7 @@ main{
   padding: 0;
 }
 
-/* Screenreader only */
+/* Screenreader */
 .sr-only{
   position:absolute;
   width:1px; height:1px;
@@ -63,9 +62,7 @@ main{
   white-space:nowrap; border:0;
 }
 
-/* =========================
-   Flash Messages
-========================= */
+/* Flash Messages */
 .flash-container{ margin-bottom: var(--s-6); display: grid; gap: var(--s-2); }
 .flash{
   background: var(--surface);
@@ -79,9 +76,7 @@ main{
 .flash.error{ border-left-color: #dc2626; }
 .flash.info{ border-left-color: #2563eb; }
 
-/* =========================
-   Components: Card / Buttons / Inputs
-========================= */
+/* Komponenten: Card, Buttons und Inputs */
 .card{
   background: var(--surface);
   border: 1px solid var(--border);
@@ -162,9 +157,7 @@ a.btn{
 .input-note{ width: 100%; }
 .input-num{ width: 100%; max-width: 9rem; }
 
-/* =========================
-   Tables
-========================= */
+/* Tables */
 .table, .table-edit{
   width: 100%;
   border-collapse: collapse;
@@ -186,13 +179,11 @@ a.btn{
 }
 .muted{ color: var(--muted); }
 
-/* Drag & Drop row */
+/* Drag und drop für row */
 .drag{ cursor: grab; user-select: none; color: var(--muted); width: 2rem; text-align:center; }
 .dnd-row.is-dragging{ opacity: .6; }
 
-/* =========================
-   Pages: Start (index.html)
-========================= */
+/* Pages: Start (index.html) */
 .start-grid{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -226,9 +217,7 @@ a.btn{
 }
 .big:disabled{ opacity:.55; cursor:not-allowed; }
 
-/* =========================
-   Pages: Plan edit (edit.html)
-========================= */
+/* Seite: Plan edit (edit.html) */
 .plan-edit{ display: grid; gap: var(--s-4); }
 
 .plan-header{
@@ -253,18 +242,16 @@ a.btn{
 }
 .actions{ display:flex; gap: var(--s-2); }
 
-/* =========================
-   Pages: Progess (progress_plan.html)
-========================= */
+/* Seite: Progess (progress_plan.html) */
 .progress-header{
-  position: relative;              /* wichtig für absolute Position des X */
+  position: relative;  /* wichtig für absolute Position des X */
 }
 
 /* Label + Select sauber ausrichten */
 .progress-row,
 .progress-control-group{
   display: grid;
-  grid-template-columns: 140px 1fr; /* <- Label-Spalte fix, Select-Spalte flexibel */
+  grid-template-columns: 140px 1fr;
   align-items: center;
   column-gap: var(--s-3);
   margin: var(--s-3) var(--s-4);
@@ -276,43 +263,40 @@ a.btn{
   right: var(--s-3);
 }
 
-/* Chart-Bereich in der Card */
+/* Chart Bereich in der Card */
 .progress-chart{
   padding: var(--s-4);
-  overflow: hidden;          /* verhindert “rausragen” */
+  overflow: hidden;
 }
 
-/* Bild responsiv begrenzen */
+/* Bild begrenzen */
 .progress-chart__img{
   display: block;
   width: 100%;
   max-width: 100%;
   height: auto;
-  max-height: 420px;         /* <- macht es weniger dominant */
+  max-height: 420px;
   object-fit: contain;
   margin: 0 auto;
 }
 
 .progress-footer{
   display: flex;
-  justify-content: flex-end;       /* nach rechts */
+  justify-content: flex-end; /* nach rechts */
   padding: var(--s-4);
 }
+
 /* Optional: bei sehr breiten Screens etwas mehr Höhe erlauben */
 @media (min-width: 1100px){
   .progress-chart__img{ max-height: 480px; }
 }
 
-/* =========================
-   Utilities
-========================= */
+/* Utilities */
 .is-hidden{
   display: none !important;
 }
 
-/* =========================
-   Pages: Plan edit (edit.html) – Column widths (replaces inline styles)
-========================= */
+/* Seite: Plan edit (edit.html) – Column widths (ersetzt inline styles) */
 .table-edit th.col-drag{ width: 2rem; }
 .table-edit th.col-sets{ width: 8rem; }
 .table-edit th.col-reps{ width: 8rem; }

@@ -1,4 +1,3 @@
-
 """sessions.py
 
 Dieses Modul ist für das Erfassen der Trainingsdaten, sprich einer Trainingssession, zuständig.
@@ -205,9 +204,7 @@ def _upsert_entries(db: Connection, session_id: int, form: Dict[str, Any]) -> No
         )
 
 
-def _update_plan_notes_from_form(
-    db: Connection, plan_id: int, form: Dict[str, Any]
-) -> None:
+def _update_plan_notes_from_form(db: Connection, plan_id: int, form: Dict[str, Any]) -> None:
     """Übernimmt Notizen aus dem Record-Formular dauerhaft in den Trainingsplan.
 
         db -- für die DB Connection
@@ -306,7 +303,7 @@ def finish_session(session_id: int):
             (_utcnow_iso(), session_id),
         )
 
-    # Letzte Gewichte der Session als Defaults übernehme
+    # Letzte Gewichte der Session als Defaults übernehmen
     _update_plan_defaults_from_session(db, sess["plan_id"], session_id)
 
     db.commit()
