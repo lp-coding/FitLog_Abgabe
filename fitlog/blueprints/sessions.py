@@ -37,10 +37,10 @@ def _utcnow_iso() -> str:
 def _load_session(db: Connection, session_id: int) -> sqlite3.Row:
     """Lädt den Session Header mit Planname oder bricht mit 404 ab.
 
-        db -- für die DB Connection
-        session_id -- ID der Session
+    db -- für die DB Connection
+    session_id -- ID der Session
 
-        return -- Session-Datensatz mit plan_name
+    returns -- Session-Datensatz mit plan_name
     """
     row = db.execute(
         """
@@ -65,15 +65,15 @@ def _load_session(db: Connection, session_id: int) -> sqlite3.Row:
 def _load_record_items(db: Connection, session_id: int) -> List[sqlite3.Row]:
     """Lädt die Zeilen für das Erfassungsformular einer Session.
 
-        Pro Übung im Trainingsplan wird eine Zeile bereitgestellt:
-        - Existiert bereits ein Eintrag in `session_entries`, werden diese Werte verwendet.
-        - Sonst werden die Default-Werte aus `plan_exercises` genutzt.
-        - Notiz: Session-Notiz hat Vorrang, sonst Plan-Notiz, sonst leer.
+    Pro Übung im Trainingsplan wird eine Zeile bereitgestellt:
+    - Existiert bereits ein Eintrag in `session_entries`, werden diese Werte verwendet.
+    - Sonst werden die Default-Werte aus `plan_exercises` genutzt.
+    - Notiz: Session-Notiz hat Vorrang, sonst Plan-Notiz, sonst leer.
 
-        db -- offene SQLite-Connection
-        session_id -- ID der Session
+    db -- offene SQLite-Connection
+    session_id -- ID der Session
 
-        return -- Liste von Rows (exercise_id, name, sets, reps, weight_kg, note)
+    returns -- Liste von Rows (exercise_id, name, sets, reps, weight_kg, note)
     """
     return db.execute(
         """
@@ -100,18 +100,16 @@ def _load_record_items(db: Connection, session_id: int) -> List[sqlite3.Row]:
 # ------------------------------
 # Persist / Updates
 # ------------------------------
-def _update_plan_defaults_from_session(
-    db: Connection, plan_id: int, session_id: int
-) -> None:
+def _update_plan_defaults_from_session(db: Connection, plan_id: int, session_id: int) -> None:
     """Übernimmt Gewichte aus der Session als neue Standard Gewichte des Plans.
 
     Für jede Übung mit einem gültigen, positiven Gewicht in dieser Session wird
     `plan_exercises.default_weight_kg` aktualisiert. Dadurch werden die nächsten
     Sessions mit aktuellen Gewichten vorbelegt.
 
-        db -- für die DB Connection
-        plan_id -- ID des Plans
-        session_id -- ID der Session
+    db -- für die DB Connection
+    plan_id -- ID des Plans
+    session_id -- ID der Session
     """
     rows = db.execute(
         """
@@ -146,9 +144,9 @@ def _update_plan_defaults_from_session(
 def _upsert_entries(db: Connection, session_id: int, form: Dict[str, Any]) -> None:
     """Schreibt Session Einträge anhand der Formulardaten.
 
-        db -- für die DB Connection
-        session_id -- ID der Session
-        form -- Das Formular (request.form)
+    db         -- für die DB Connection
+    session_id -- ID der Session
+    form       -- Das Formular (request.form)
     """
 
     def get(key: str) -> str:
@@ -172,7 +170,6 @@ def _upsert_entries(db: Connection, session_id: int, form: Dict[str, Any]) -> No
             return None
 
     # exercise_id steuert, welche Zeilen verarbeitet werden (eine pro Übung im Formular)
-    # form parameter wird WOHL NICHT BENUTZT daher : exercise_ids = [int(x) for x in form.getlist("exercise_id") if str(x).isdigit()]
     exercise_ids = [int(x) for x in request.form.getlist("exercise_id") if str(x).isdigit()]
 
     for ex_id in exercise_ids:
@@ -207,15 +204,14 @@ def _upsert_entries(db: Connection, session_id: int, form: Dict[str, Any]) -> No
 def _update_plan_notes_from_form(db: Connection, plan_id: int, form: Dict[str, Any]) -> None:
     """Übernimmt Notizen aus dem Record-Formular dauerhaft in den Trainingsplan.
 
-        db -- für die DB Connection
-        plan_id -- ID des Plans
-        form -- Das Formular (request.form)
+    db -- für die DB Connection
+    plan_id -- ID des Plans
+    form -- Das Formular (request.form)
     """
 
     def get(key: str) -> str:
         return str(form.get(key) or "").strip()
 
-    # Vermutlich ERSETZEN DURCH : exercise_ids = [int(x) for x in form.getlist("exercise_id") if str(x).isdigit()]
     exercise_ids = [int(x) for x in request.form.getlist("exercise_id") if str(x).isdigit()]
 
     for ex_id in exercise_ids:
@@ -291,7 +287,6 @@ def finish_session(session_id: int):
     if mins > 0.0:
         try:
             start_dt = datetime.fromisoformat(sess["started_at"])
-        # KANN VERMUTLICH NOCH RAUS mit utcnow
         except Exception:
             start_dt = datetime.utcnow()
         ended_at_iso = (start_dt + timedelta(minutes=mins)).isoformat(timespec="seconds")
