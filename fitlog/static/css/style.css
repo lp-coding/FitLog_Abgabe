@@ -296,7 +296,7 @@ a.btn{
   display: none !important;
 }
 
-/* Seite: Plan edit (edit.html) – Column widths (ersetzt inline styles) */
+/* Seite: Plan edit (edit.html) */
 .table-edit th.col-drag{ width: 2rem; }
 .table-edit th.col-sets{ width: 8rem; }
 .table-edit th.col-reps{ width: 8rem; }
